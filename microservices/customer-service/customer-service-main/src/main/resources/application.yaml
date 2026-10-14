@@ -18,3 +18,17 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  mongodb:
+    host: localhost
+    port: 2026
+    username: mongod
+    password:
+      - m
+      - o
+      - n
+      - g
+      - o
+      - d
+    database: db_customer
+    authentication-database: admin
+
