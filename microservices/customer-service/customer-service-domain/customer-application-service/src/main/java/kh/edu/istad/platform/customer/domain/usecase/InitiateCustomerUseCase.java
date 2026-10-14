@@ -26,5 +26,6 @@ public class InitiateCustomerUseCase {
         // save data into database (output port)
         // customerRepository.save();
         return new InitiateCustomerResult(UUID.randomUUID());
+
     }
 }
