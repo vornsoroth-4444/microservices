@@ -1,4 +1,6 @@
 
 rootProject.name = 'microservices'
-includeBuild 'bussiness-service'
+includeBuild 'business-service'
 includeBuild 'customer-service'
+includeBuild 'order-service'
+includeBuild 'payment-service'

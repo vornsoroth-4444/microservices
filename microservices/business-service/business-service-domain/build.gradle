@@ -1,0 +1,6 @@
+plugins {
+    id 'java'
+}
+
+group = 'kh.edu.istad'
+version = '1.0.0'

@@ -1,0 +1,16 @@
+plugins {
+    id 'spring-boot-common-conventions'
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = false
+}
+
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
