@@ -66,6 +66,35 @@ public class Business extends AggregateRoot<BusinessId> {
         this.status = BusinessStatus.ACTIVE;
     }
 
+    public void validateOrder(OrderDetail orderDetail) {
+        if (getId() == null || status != BusinessStatus.ACTIVE) {
+            throw new BusinessDomainException("Only active businesses can validate orders!");
+        }
+        if (orderDetail == null) {
+            throw new BusinessDomainException("Order detail must not be null!");
+        }
+        orderDetail.validate();
+        for (Product product : orderDetail.getProducts()) {
+            product.validateProduct();
+            if (!getId().equals(product.getBusinessId())) {
+                throw new BusinessDomainException("Order contains a product from another business!");
+            }
+            if (!product.isAvailable()) {
+                throw new BusinessDomainException("Unavailable products cannot be ordered!");
+            }
+        }
+    }
+
+    public OrderApproval createOrderApproval(OrderDetail orderDetail) {
+        validateOrder(orderDetail);
+        OrderApproval approval = OrderApproval.builder()
+                .businessId(getId())
+                .orderId(orderDetail.getId())
+                .build();
+        approval.initializeApproval();
+        return approval;
+    }
+
     public String getName() {
         return name;
     }

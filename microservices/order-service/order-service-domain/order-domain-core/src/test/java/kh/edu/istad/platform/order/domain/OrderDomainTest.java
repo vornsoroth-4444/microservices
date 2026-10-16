@@ -3,6 +3,7 @@ package kh.edu.istad.platform.order.domain;
 import kh.edu.istad.common.domain.valueobject.*;
 import kh.edu.istad.platform.order.domain.entity.Order;
 import kh.edu.istad.platform.order.domain.entity.OrderItem;
+import kh.edu.istad.platform.order.domain.entity.Product;
 import kh.edu.istad.platform.order.domain.event.OrderCreatedEvent;
 import kh.edu.istad.platform.order.domain.exception.OrderDomainException;
 import kh.edu.istad.platform.order.domain.service.OrderDomainService;
@@ -120,5 +121,31 @@ class OrderDomainTest {
 
         orderDomainService.approveOrder(order);
         assertEquals(OrderStatus.APPROVED, order.getOrderStatus());
+    }
+
+    @Test
+    void testProductValidation() {
+        Product product = Product.builder()
+                .productId(productId)
+                .name("Coffee")
+                .price(new Money(new BigDecimal("3.50")))
+                .build();
+
+        product.validateProduct();
+
+        assertEquals(productId, product.getId());
+        assertEquals("Coffee", product.getName());
+        assertEquals(new Money(new BigDecimal("3.50")), product.getPrice());
+    }
+
+    @Test
+    void testProductValidation_RejectsInvalidPrice() {
+        Product product = Product.builder()
+                .productId(productId)
+                .name("Coffee")
+                .price(Money.ZERO)
+                .build();
+
+        assertThrows(OrderDomainException.class, product::validateProduct);
     }
 }
