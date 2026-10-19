@@ -8,5 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BusinessApplicationService {
     public static void main(String[] arg) {
         SpringApplication.run(BusinessApplicationService.class);
+
     }
 }
