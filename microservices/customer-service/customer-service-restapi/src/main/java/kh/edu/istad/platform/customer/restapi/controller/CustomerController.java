@@ -3,18 +3,15 @@ package kh.edu.istad.platform.customer.restapi.controller;
 import jakarta.validation.Valid;
 import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
 import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerCommand;
-import kh.edu.istad.platform.customer.domain.usecase.InitiateCustomerUseCase;
-import kh.edu.istad.platform.customer.domain.usecase.InitiateDeactivateCustomerUseCase;
-import kh.edu.istad.platform.customer.domain.usecase.InitiateUpdateCustomerUseCase;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerDeactivateInitiateResponse;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateRequest;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateResponse;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateInitiateRequest;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateInitiateResponse;
+import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.platform.customer.domain.usecase.*;
+import kh.edu.istad.platform.customer.restapi.dto.*;
 import kh.edu.istad.platform.customer.restapi.mapper.CustomerWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -27,18 +24,37 @@ public class CustomerController {
     private final InitiateUpdateCustomerUseCase initiateUpdateCustomerUseCase;
     private final InitiateDeactivateCustomerUseCase initiateDeactivateCustomerUseCase;
     private final CustomerWebMapper customerWebMapper;
+    private final CreateCustomerUseCase createCustomerUseCase;
+    private final QueryCustomerUseCase queryCustomerUseCase;
+
+//    @ResponseStatus(HttpStatus.CREATED)
+//    @PostMapping
+//    public CustomerInitiateResponse initiateCustomer(
+//            @RequestBody CustomerInitiateRequest customerInitiateRequest
+//    ) {
+//
+//        InitiateCustomerResult result = initiateCustomerUseCase.execute(
+//               customerWebMapper.toCommand(customerInitiateRequest)
+//        );
+//        return customerWebMapper.toResponse(result);
+//    }
+
+    @GetMapping
+    public Flux<Customer> findAll(){
+        return queryCustomerUseCase.findAll();
+    }
+
+    @GetMapping("/query")
+    public Flux<Customer> query(){
+        return queryCustomerUseCase.query();
+    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public CustomerInitiateResponse initiateCustomer(
-            @RequestBody CustomerInitiateRequest customerInitiateRequest
-    ) {
-
-        InitiateCustomerResult result = initiateCustomerUseCase.execute(
-               customerWebMapper.toCommand(customerInitiateRequest)
-        );
-        return customerWebMapper.toResponse(result);
+    public Mono<Customer> create (@RequestBody CreateCustomerRequest request){
+        return createCustomerUseCase.create(customerWebMapper.toDomain(request));
     }
+
     @PutMapping("/{customerId}")
     public CustomerUpdateInitiateResponse updateCustomer(
             @PathVariable("customerId") UUID customerId,

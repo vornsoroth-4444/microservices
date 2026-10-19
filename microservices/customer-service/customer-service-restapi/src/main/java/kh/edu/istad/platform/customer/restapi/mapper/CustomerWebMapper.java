@@ -5,11 +5,11 @@ import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
 import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerResult;
 import kh.edu.istad.platform.customer.domain.dto.InitiateUpdateCustomerCommand;
 import kh.edu.istad.platform.customer.domain.dto.InitiateUpdateCustomerResult;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerDeactivateInitiateResponse;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateRequest;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateResponse;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateInitiateRequest;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateInitiateResponse;
+import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.platform.customer.domain.usecase.CreateCustomerUseCase;
+import kh.edu.istad.platform.customer.domain.valueobject.Email;
+import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
+import kh.edu.istad.platform.customer.restapi.dto.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -31,4 +31,12 @@ public interface CustomerWebMapper {
 
     CustomerDeactivateInitiateResponse toDeactivateResponse(InitiateDeactivateCustomerResult result);
 
+
+    Customer toDomain(CreateCustomerRequest request);
+    default Email toEmail(String email){
+        return new Email(email);
+    }
+    default PhoneNumber toPhoneNumber(String phoneNumber){
+        return new PhoneNumber(phoneNumber);
+    }
 }
