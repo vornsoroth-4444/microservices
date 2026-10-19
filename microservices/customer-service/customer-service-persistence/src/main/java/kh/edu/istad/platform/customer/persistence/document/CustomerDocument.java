@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.time.Instant;
 
@@ -33,6 +34,18 @@ public class CustomerDocument implements Persistable<String> {
     private  String phoneNumber;
 
     private CustomerStatus status;
+
+    // @DocumentReference (Spring Data MongoDB 3.3+):
+    // Stored as a reference ID in MongoDB
+    @DocumentReference
+    private CustomerSegmentDocument segment;
+
+    // Populated when resolving the reference reactively via MongoDB $lookup
+    private CustomerSegmentDocument resolvedSegment;
+
+    public CustomerSegmentDocument getSegment() {
+        return resolvedSegment != null ? resolvedSegment : segment;
+    }
 
     @CreatedBy
     private String createdBy;

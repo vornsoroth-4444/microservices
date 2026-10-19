@@ -10,7 +10,7 @@ public record CreateCustomerRequest(
         String givenName,
         String email,
         String phoneNumber,
-        String status
-
+        String status,
+        String segmentId
 ) {
 }

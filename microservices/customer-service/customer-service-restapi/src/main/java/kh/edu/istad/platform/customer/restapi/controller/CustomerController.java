@@ -1,9 +1,9 @@
 package kh.edu.istad.platform.customer.restapi.controller;
 
 import jakarta.validation.Valid;
-import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
-import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerCommand;
+import kh.edu.istad.platform.customer.domain.dto.*;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.platform.customer.domain.entity.CustomerSegment;
 import kh.edu.istad.platform.customer.domain.usecase.*;
 import kh.edu.istad.platform.customer.restapi.dto.*;
 import kh.edu.istad.platform.customer.restapi.mapper.CustomerWebMapper;
@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/customers")
+@RequestMapping({"/api/customers", "/customers"})
 public class CustomerController {
 
     private final InitiateCustomerUseCase initiateCustomerUseCase;
@@ -40,13 +40,87 @@ public class CustomerController {
 //    }
 
     @GetMapping
-    public Flux<Customer> findAll(){
+    public Flux<Customer> findAll(CustomerFilterRequest request){
+        if (request != null && hasAnyFilter(request)) {
+            return query(request);
+        }
         return queryCustomerUseCase.findAll();
     }
 
+    @GetMapping("/segments")
+    public Flux<CustomerSegment> findAllSegments() {
+        return queryCustomerUseCase.findAllSegments();
+    }
+
     @GetMapping("/query")
-    public Flux<Customer> query(){
-        return queryCustomerUseCase.query();
+    public Flux<Customer> query(CustomerFilterRequest request){
+        CustomerFilterQuery filterQuery = (request != null)
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.query(filterQuery);
+    }
+
+    @PostMapping("/query")
+    public Flux<Customer> queryWithPost(@RequestBody(required = false) CustomerFilterRequest request){
+        CustomerFilterQuery filterQuery = (request != null)
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.query(filterQuery);
+    }
+
+    @GetMapping({"/statistic", "/statistics"})
+    public Flux<CustomerStatistic> getStatistic(CustomerFilterRequest request) {
+        CustomerFilterQuery filterQuery = (request != null && hasAnyFilter(request))
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.getStatistic(filterQuery);
+    }
+
+    @PostMapping({"/statistic", "/statistics"})
+    public Flux<CustomerStatistic> getStatisticWithPost(@RequestBody(required = false) CustomerFilterRequest request) {
+        CustomerFilterQuery filterQuery = (request != null && hasAnyFilter(request))
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.getStatistic(filterQuery);
+    }
+
+    @GetMapping({"/statistic/summary", "/statistics/summary"})
+    public Mono<CustomerSummaryStatistic> getSummaryStatistic() {
+        return queryCustomerUseCase.getSummaryStatistic();
+    }
+
+    @GetMapping({"/report", "/reports"})
+    public Flux<CustomerReport> getReport(CustomerFilterRequest request) {
+        CustomerFilterQuery filterQuery = (request != null && hasAnyFilter(request))
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.getReport(filterQuery);
+    }
+
+    @PostMapping({"/report", "/reports"})
+    public Flux<CustomerReport> getReportWithPost(@RequestBody(required = false) CustomerFilterRequest request) {
+        CustomerFilterQuery filterQuery = (request != null && hasAnyFilter(request))
+                ? customerWebMapper.toFilterQuery(request)
+                : CustomerFilterQuery.empty();
+        return queryCustomerUseCase.getReport(filterQuery);
+    }
+
+    @GetMapping("/{customerId}")
+    public Mono<Customer> findById(@PathVariable("customerId") UUID customerId) {
+        return queryCustomerUseCase.findById(customerId);
+    }
+
+    private boolean hasAnyFilter(CustomerFilterRequest request) {
+        return request.username() != null ||
+                request.familyName() != null ||
+                request.givenName() != null ||
+                request.email() != null ||
+                request.phoneNumber() != null ||
+                request.status() != null ||
+                request.keyword() != null ||
+                request.page() != null ||
+                request.size() != null ||
+                request.sortBy() != null;
     }
 
     @ResponseStatus(HttpStatus.CREATED)

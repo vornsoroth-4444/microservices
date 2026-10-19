@@ -16,6 +16,7 @@ public class Customer extends AggregateRoot<CustomerId> {
     private final Email email;
     private final PhoneNumber phoneNumber;
     private CustomerStatus status;
+    private CustomerSegment segment;
 
     // Domain Critical Logic
     public void initiateCustomer() {
@@ -73,6 +74,10 @@ public class Customer extends AggregateRoot<CustomerId> {
         return status;
     }
 
+    public CustomerSegment getSegment() {
+        return segment;
+    }
+
     private Customer(Builder builder) {
         super.setId(builder.id);
         username = builder.username;
@@ -81,6 +86,7 @@ public class Customer extends AggregateRoot<CustomerId> {
         email = builder.email;
         phoneNumber = builder.phoneNumber;
         status = builder.status;
+        segment = builder.segment;
     }
 
     public static Builder builder() {
@@ -96,6 +102,7 @@ public class Customer extends AggregateRoot<CustomerId> {
         private Email email;
         private PhoneNumber phoneNumber;
         private CustomerStatus status;
+        private CustomerSegment segment;
 
         private Builder() {
         }
@@ -132,6 +139,11 @@ public class Customer extends AggregateRoot<CustomerId> {
 
         public Builder status(CustomerStatus val) {
             status = val;
+            return this;
+        }
+
+        public Builder segment(CustomerSegment val) {
+            segment = val;
             return this;
         }
 

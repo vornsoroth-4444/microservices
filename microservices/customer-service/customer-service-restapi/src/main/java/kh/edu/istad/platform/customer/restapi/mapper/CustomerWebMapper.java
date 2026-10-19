@@ -1,12 +1,9 @@
 package kh.edu.istad.platform.customer.restapi.mapper;
 
-import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerCommand;
-import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
-import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerResult;
-import kh.edu.istad.platform.customer.domain.dto.InitiateUpdateCustomerCommand;
-import kh.edu.istad.platform.customer.domain.dto.InitiateUpdateCustomerResult;
+import kh.edu.istad.platform.customer.domain.dto.*;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
 import kh.edu.istad.platform.customer.domain.usecase.CreateCustomerUseCase;
+import kh.edu.istad.platform.customer.domain.valueobject.CustomerStatus;
 import kh.edu.istad.platform.customer.domain.valueobject.Email;
 import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
 import kh.edu.istad.platform.customer.restapi.dto.*;
@@ -32,11 +29,26 @@ public interface CustomerWebMapper {
     CustomerDeactivateInitiateResponse toDeactivateResponse(InitiateDeactivateCustomerResult result);
 
 
+    @Mapping(target = "segment.id", source = "segmentId")
+    @Mapping(target = "status", ignore = true)
     Customer toDomain(CreateCustomerRequest request);
     default Email toEmail(String email){
         return new Email(email);
     }
     default PhoneNumber toPhoneNumber(String phoneNumber){
         return new PhoneNumber(phoneNumber);
+    }
+
+    CustomerFilterQuery toFilterQuery(CustomerFilterRequest request);
+
+    default CustomerStatus toCustomerStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return CustomerStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }
