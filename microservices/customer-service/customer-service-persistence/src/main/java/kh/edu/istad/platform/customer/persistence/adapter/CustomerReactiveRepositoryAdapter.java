@@ -67,6 +67,7 @@ public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
         return reactiveMongoTemplate.find(query, CustomerDocument.class).map(
                 customerPersistenceMapper::toDomain
         );
+
     }
 
 
