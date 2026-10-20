@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.EnableReactiveMongoAuditing;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
-@EnableReactiveMongoAuditing
+@EnableReactiveMongoAuditing(auditorAwareRef = "auditorAwareConfig", modifyOnCreate = false)
 @Configuration
 public class MongoConfig {
     @Bean

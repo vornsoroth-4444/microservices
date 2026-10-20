@@ -17,7 +17,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document
+@Document(collation = "customers")
 public class CustomerDocument implements Persistable<String> {
 
     @Id
