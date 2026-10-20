@@ -1,5 +1,6 @@
 package kh.edu.istad.platform.customer.domain.entity;
 
+import kh.edu.istad.platform.customer.domain.exception.CustomerDomainException;
 import kh.edu.istad.platform.customer.domain.valueobject.CustomerSegmentType;
 
 public class CustomerSegment {
@@ -16,6 +17,28 @@ public class CustomerSegment {
         this.name = name;
         this.type = type;
         this.description = description;
+    }
+
+    public void validate() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new CustomerDomainException("Customer segment name must not be blank");
+        }
+        if (type == null) {
+            throw new CustomerDomainException("Customer segment type must not be null");
+        }
+    }
+
+    public void update(String name, CustomerSegmentType type, String description) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name.trim();
+        }
+        if (type != null) {
+            this.type = type;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        validate();
     }
 
     public String getId() {

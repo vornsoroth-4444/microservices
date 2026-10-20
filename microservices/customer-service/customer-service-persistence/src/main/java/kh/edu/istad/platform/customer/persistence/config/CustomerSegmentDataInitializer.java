@@ -22,12 +22,12 @@ public class CustomerSegmentDataInitializer implements CommandLineRunner {
         customerSegmentMongoRepository.count()
                 .filter(count -> count == 0)
                 .flatMapMany(count -> {
-                    log.info("Initializing default CustomerSegments (Sliver, Gold, Premium)...");
+                    log.info("Initializing default CustomerSegments (Silver, Gold, Premium)...");
                     return customerSegmentMongoRepository.saveAll(List.of(
                             CustomerSegmentDocument.builder()
-                                    .name("Sliver")
-                                    .type(CustomerSegmentType.SLIVER)
-                                    .description("Sliver tier customer segment")
+                                    .name("Silver")
+                                    .type(CustomerSegmentType.SILVER)
+                                    .description("Silver tier customer segment")
                                     .build(),
                             CustomerSegmentDocument.builder()
                                     .name("Gold")

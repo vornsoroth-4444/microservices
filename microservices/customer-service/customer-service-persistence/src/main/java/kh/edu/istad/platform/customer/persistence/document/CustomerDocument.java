@@ -1,9 +1,6 @@
 package kh.edu.istad.platform.customer.persistence.document;
 
-import kh.edu.istad.common.domain.valueobject.CustomerId;
 import kh.edu.istad.platform.customer.domain.valueobject.CustomerStatus;
-import kh.edu.istad.platform.customer.domain.valueobject.Email;
-import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
 import lombok.*;
 import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Persistable;
@@ -17,26 +14,25 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collation = "customers")
+@Document(collection = "customers")
 public class CustomerDocument implements Persistable<String> {
 
     @Id
     private String id;
 
-    private  String username;
+    private String username;
 
     private String familyName;
 
     private String givenName;
 
-    private  String email;
+    private String email;
 
-    private  String phoneNumber;
+    private String phoneNumber;
 
     private CustomerStatus status;
 
-    // @DocumentReference (Spring Data MongoDB 3.3+):
-    // Stored as a reference ID in MongoDB
+    // @DocumentReference: stored as a reference ID in MongoDB
     @DocumentReference
     private CustomerSegmentDocument segment;
 
@@ -45,6 +41,10 @@ public class CustomerDocument implements Persistable<String> {
 
     public CustomerSegmentDocument getSegment() {
         return resolvedSegment != null ? resolvedSegment : segment;
+    }
+
+    public void setSegment(CustomerSegmentDocument segment) {
+        this.segment = segment;
     }
 
     @CreatedBy
@@ -57,7 +57,7 @@ public class CustomerDocument implements Persistable<String> {
     private String modifiedBy;
 
     @LastModifiedDate
-    private String modifiedAt;
+    private Instant modifiedAt;
 
     @Override
     public boolean isNew() {

@@ -7,6 +7,7 @@ import kh.edu.istad.platform.customer.domain.dto.CustomerStatistic;
 import kh.edu.istad.platform.customer.domain.dto.CustomerSummaryStatistic;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
 import kh.edu.istad.platform.customer.domain.entity.CustomerSegment;
+import kh.edu.istad.platform.customer.domain.exception.CustomerNotFoundException;
 import kh.edu.istad.platform.customer.domain.port.out.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,23 +21,29 @@ import java.util.UUID;
 public class QueryCustomerUseCase {
     private final CustomerRepository customerRepository;
 
-    public Flux<Customer> findAll(){
+    public Flux<Customer> findAll() {
         return customerRepository.findAll();
     }
 
     public Mono<Customer> findById(UUID id) {
-        return customerRepository.findById(new CustomerId(id));
+        return customerRepository.findById(new CustomerId(id))
+                .switchIfEmpty(Mono.error(new CustomerNotFoundException("Customer with id '" + id + "' not found")));
     }
 
-    public Flux<Customer> query(){
+    public Mono<Customer> findByUsername(String username) {
+        return customerRepository.findByUsername(username)
+                .switchIfEmpty(Mono.error(new CustomerNotFoundException("Customer with username '" + username + "' not found")));
+    }
+
+    public Flux<Customer> query() {
         return customerRepository.query();
     }
 
-    public Flux<Customer> query(CustomerFilterQuery filterQuery){
+    public Flux<Customer> query(CustomerFilterQuery filterQuery) {
         return customerRepository.query(filterQuery);
     }
 
-    public Flux<CustomerSegment> findAllSegments(){
+    public Flux<CustomerSegment> findAllSegments() {
         return customerRepository.findAllSegments();
     }
 

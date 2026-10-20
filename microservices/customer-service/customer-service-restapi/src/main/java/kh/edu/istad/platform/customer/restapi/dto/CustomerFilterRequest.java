@@ -10,6 +10,8 @@ public record CustomerFilterRequest(
         String email,
         String phoneNumber,
         String status,
+        String segmentId,
+        String segmentName,
         String keyword,
         Integer page,
         Integer size,

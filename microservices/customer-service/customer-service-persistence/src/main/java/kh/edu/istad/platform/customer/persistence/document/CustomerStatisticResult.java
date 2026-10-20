@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
 @NoArgsConstructor
@@ -14,22 +12,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Builder
 public class CustomerStatisticResult {
 
-    @Id
-    @Field("_id")
-    private CustomerStatus id;
-
     private CustomerStatus status;
 
+    private String segmentName;
+
     private Long total;
-
-    public CustomerStatus getStatus() {
-        return status != null ? status : id;
-    }
-
-    public void setId(CustomerStatus id) {
-        this.id = id;
-        if (this.status == null) {
-            this.status = id;
-        }
-    }
 }

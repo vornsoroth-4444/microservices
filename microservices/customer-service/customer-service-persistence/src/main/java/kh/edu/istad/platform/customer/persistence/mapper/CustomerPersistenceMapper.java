@@ -16,6 +16,7 @@ import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CustomerPersistenceMapper {
+
     @Mapping(source = "id.value", target = "id")
     @Mapping(source = "email.value", target = "email")
     @Mapping(source = "phoneNumber.value", target = "phoneNumber")
@@ -51,6 +52,7 @@ public interface CustomerPersistenceMapper {
         }
         return CustomerStatistic.builder()
                 .status(statisticResult.getStatus())
+                .segmentName(statisticResult.getSegmentName())
                 .total(statisticResult.getTotal())
                 .build();
     }

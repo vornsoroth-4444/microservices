@@ -20,31 +20,84 @@ import java.util.UUID;
 @RequestMapping({"/api/customers", "/customers"})
 public class CustomerController {
 
-    private final InitiateCustomerUseCase initiateCustomerUseCase;
-    private final InitiateUpdateCustomerUseCase initiateUpdateCustomerUseCase;
-    private final InitiateDeactivateCustomerUseCase initiateDeactivateCustomerUseCase;
-    private final CustomerWebMapper customerWebMapper;
     private final CreateCustomerUseCase createCustomerUseCase;
     private final QueryCustomerUseCase queryCustomerUseCase;
+    private final UpdateCustomerUseCase updateCustomerUseCase;
+    private final PatchCustomerUseCase patchCustomerUseCase;
+    private final DeactivateCustomerUseCase deactivateCustomerUseCase;
+    private final ActivateCustomerUseCase activateCustomerUseCase;
+    private final DeleteCustomerUseCase deleteCustomerUseCase;
+    private final CustomerWebMapper customerWebMapper;
 
-//    @ResponseStatus(HttpStatus.CREATED)
-//    @PostMapping
-//    public CustomerInitiateResponse initiateCustomer(
-//            @RequestBody CustomerInitiateRequest customerInitiateRequest
-//    ) {
-//
-//        InitiateCustomerResult result = initiateCustomerUseCase.execute(
-//               customerWebMapper.toCommand(customerInitiateRequest)
-//        );
-//        return customerWebMapper.toResponse(result);
-//    }
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Customer> create(@Valid @RequestBody CreateCustomerRequest request) {
+        Customer customer = customerWebMapper.toDomain(request);
+        return createCustomerUseCase.create(customer, request.segmentId());
+    }
 
     @GetMapping
-    public Flux<Customer> findAll(CustomerFilterRequest request){
+    public Flux<Customer> findAll(CustomerFilterRequest request) {
         if (request != null && hasAnyFilter(request)) {
             return query(request);
         }
         return queryCustomerUseCase.findAll();
+    }
+
+    @GetMapping("/{customerId}")
+    public Mono<Customer> findById(@PathVariable("customerId") UUID customerId) {
+        return queryCustomerUseCase.findById(customerId);
+    }
+
+    @GetMapping("/username/{username}")
+    public Mono<Customer> findByUsername(@PathVariable("username") String username) {
+        return queryCustomerUseCase.findByUsername(username);
+    }
+
+    @PutMapping("/{customerId}")
+    public Mono<Customer> update(
+            @PathVariable("customerId") UUID customerId,
+            @Valid @RequestBody UpdateCustomerRequest request
+    ) {
+        return updateCustomerUseCase.update(
+                customerId,
+                request.familyName(),
+                request.givenName(),
+                request.email(),
+                request.phoneNumber(),
+                request.segmentId()
+        );
+    }
+
+    @PatchMapping("/{customerId}")
+    public Mono<Customer> patch(
+            @PathVariable("customerId") UUID customerId,
+            @RequestBody PatchCustomerRequest request
+    ) {
+        return patchCustomerUseCase.patch(
+                customerId,
+                request.familyName(),
+                request.givenName(),
+                request.email(),
+                request.phoneNumber(),
+                request.segmentId()
+        );
+    }
+
+    @PatchMapping("/{customerId}/deactivate")
+    public Mono<Customer> deactivate(@PathVariable("customerId") UUID customerId) {
+        return deactivateCustomerUseCase.deactivate(customerId);
+    }
+
+    @PatchMapping("/{customerId}/activate")
+    public Mono<Customer> activate(@PathVariable("customerId") UUID customerId) {
+        return activateCustomerUseCase.activate(customerId);
+    }
+
+    @DeleteMapping("/{customerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> delete(@PathVariable("customerId") UUID customerId) {
+        return deleteCustomerUseCase.delete(customerId);
     }
 
     @GetMapping("/segments")
@@ -53,7 +106,7 @@ public class CustomerController {
     }
 
     @GetMapping("/query")
-    public Flux<Customer> query(CustomerFilterRequest request){
+    public Flux<Customer> query(CustomerFilterRequest request) {
         CustomerFilterQuery filterQuery = (request != null)
                 ? customerWebMapper.toFilterQuery(request)
                 : CustomerFilterQuery.empty();
@@ -61,13 +114,16 @@ public class CustomerController {
     }
 
     @PostMapping("/query")
-    public Flux<Customer> queryWithPost(@RequestBody(required = false) CustomerFilterRequest request){
+    public Flux<Customer> queryWithPost(@RequestBody(required = false) CustomerFilterRequest request) {
         CustomerFilterQuery filterQuery = (request != null)
                 ? customerWebMapper.toFilterQuery(request)
                 : CustomerFilterQuery.empty();
         return queryCustomerUseCase.query(filterQuery);
     }
 
+    /**
+     * Reports total customers grouped by status and segment.
+     */
     @GetMapping({"/statistic", "/statistics"})
     public Flux<CustomerStatistic> getStatistic(CustomerFilterRequest request) {
         CustomerFilterQuery filterQuery = (request != null && hasAnyFilter(request))
@@ -105,11 +161,6 @@ public class CustomerController {
         return queryCustomerUseCase.getReport(filterQuery);
     }
 
-    @GetMapping("/{customerId}")
-    public Mono<Customer> findById(@PathVariable("customerId") UUID customerId) {
-        return queryCustomerUseCase.findById(customerId);
-    }
-
     private boolean hasAnyFilter(CustomerFilterRequest request) {
         return request.username() != null ||
                 request.familyName() != null ||
@@ -117,43 +168,11 @@ public class CustomerController {
                 request.email() != null ||
                 request.phoneNumber() != null ||
                 request.status() != null ||
+                request.segmentId() != null ||
+                request.segmentName() != null ||
                 request.keyword() != null ||
                 request.page() != null ||
                 request.size() != null ||
                 request.sortBy() != null;
     }
-
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
-    public Mono<Customer> create (@RequestBody CreateCustomerRequest request){
-        return createCustomerUseCase.create(customerWebMapper.toDomain(request));
-    }
-
-    @PutMapping("/{customerId}")
-    public CustomerUpdateInitiateResponse updateCustomer(
-            @PathVariable("customerId") UUID customerId,
-            @Valid @RequestBody CustomerUpdateInitiateRequest request
-    ){
-        return customerWebMapper.toUpdateResponse(
-                initiateUpdateCustomerUseCase.execute(customerWebMapper.toUpdateCommand(customerId, request))
-        );
-    }
-
-    @PatchMapping("/{customerId}")
-    public CustomerUpdateInitiateResponse patchCustomer(
-            @PathVariable("customerId") UUID customerId,
-            @Valid @RequestBody CustomerUpdateInitiateRequest request
-    ){
-        return updateCustomer(customerId, request);
-    }
-
-    @PatchMapping("/{customerId}/deactivate")
-    public CustomerDeactivateInitiateResponse deactivateInitiateResponse(
-            @PathVariable("customerId") UUID customerId
-    ){
-        return customerWebMapper.toDeactivateResponse(
-                initiateDeactivateCustomerUseCase.execute(new InitiateDeactivateCustomerCommand(customerId))
-        );
-    }
-
 }

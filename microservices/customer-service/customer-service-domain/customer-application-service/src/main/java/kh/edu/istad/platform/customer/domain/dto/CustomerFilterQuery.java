@@ -11,6 +11,8 @@ public record CustomerFilterQuery(
         String email,
         String phoneNumber,
         CustomerStatus status,
+        String segmentId,
+        String segmentName,
         String keyword,
         Integer page,
         Integer size,
@@ -18,6 +20,6 @@ public record CustomerFilterQuery(
         String sortDirection
 ) {
     public static CustomerFilterQuery empty() {
-        return new CustomerFilterQuery(null, null, null, null, null, null, null, null, null, null, null);
+        return new CustomerFilterQuery(null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

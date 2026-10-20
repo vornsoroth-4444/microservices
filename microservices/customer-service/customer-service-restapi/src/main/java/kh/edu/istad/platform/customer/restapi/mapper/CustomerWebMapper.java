@@ -2,7 +2,6 @@ package kh.edu.istad.platform.customer.restapi.mapper;
 
 import kh.edu.istad.platform.customer.domain.dto.*;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
-import kh.edu.istad.platform.customer.domain.usecase.CreateCustomerUseCase;
 import kh.edu.istad.platform.customer.domain.valueobject.CustomerStatus;
 import kh.edu.istad.platform.customer.domain.valueobject.Email;
 import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
@@ -28,17 +27,20 @@ public interface CustomerWebMapper {
 
     CustomerDeactivateInitiateResponse toDeactivateResponse(InitiateDeactivateCustomerResult result);
 
-
-    @Mapping(target = "segment.id", source = "segmentId")
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "segment.id", source = "segmentId")
     Customer toDomain(CreateCustomerRequest request);
-    default Email toEmail(String email){
-        return new Email(email);
-    }
-    default PhoneNumber toPhoneNumber(String phoneNumber){
-        return new PhoneNumber(phoneNumber);
+
+    default Email toEmail(String email) {
+        return (email != null && !email.isBlank()) ? new Email(email.trim()) : null;
     }
 
+    default PhoneNumber toPhoneNumber(String phoneNumber) {
+        return (phoneNumber != null && !phoneNumber.isBlank()) ? new PhoneNumber(phoneNumber.trim()) : null;
+    }
+
+    @Mapping(target = "status", expression = "java(toCustomerStatus(request.status()))")
     CustomerFilterQuery toFilterQuery(CustomerFilterRequest request);
 
     default CustomerStatus toCustomerStatus(String status) {

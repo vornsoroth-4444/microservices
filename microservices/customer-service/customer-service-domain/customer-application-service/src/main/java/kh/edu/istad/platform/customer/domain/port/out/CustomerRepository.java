@@ -10,8 +10,6 @@ import kh.edu.istad.platform.customer.domain.entity.CustomerSegment;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
 public interface CustomerRepository {
     Mono<Customer> save(Customer customer);
 
@@ -19,9 +17,15 @@ public interface CustomerRepository {
 
     Mono<Customer> findById(CustomerId id);
 
-    Mono<Void> DeleteById(CustomerId id);
+    Mono<Customer> findByUsername(String username);
 
-    Mono<Customer> findByUserName(String username);
+    Mono<Boolean> existsById(CustomerId id);
+
+    Mono<Boolean> existsByUsername(String username);
+
+    Mono<Boolean> existsByEmail(String email);
+
+    Mono<Void> deleteById(CustomerId id);
 
     Flux<Customer> query();
 
@@ -38,5 +42,6 @@ public interface CustomerRepository {
     Flux<CustomerReport> getReport(CustomerFilterQuery filterQuery);
 
     Mono<CustomerSummaryStatistic> getSummaryStatistic();
-}
 
+    Mono<Long> countCustomersBySegmentId(String segmentId);
+}

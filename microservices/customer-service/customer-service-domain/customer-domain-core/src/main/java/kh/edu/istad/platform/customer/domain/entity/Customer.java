@@ -13,33 +13,59 @@ public class Customer extends AggregateRoot<CustomerId> {
     private final String username;
     private String familyName;
     private String givenName;
-    private final Email email;
-    private final PhoneNumber phoneNumber;
+    private Email email;
+    private PhoneNumber phoneNumber;
     private CustomerStatus status;
     private CustomerSegment segment;
 
     // Domain Critical Logic
     public void initiateCustomer() {
-        validateCustomer();
+        validateCustomerForInitiation();
         super.setId(new CustomerId(UUID.randomUUID()));
         status = CustomerStatus.ACTIVE;
     }
 
-    private void validateCustomer() {
+    private void validateCustomerForInitiation() {
         if (super.getId() != null) {
-            throw new CustomerDomainException("Customer id must be null");
+            throw new CustomerDomainException("Customer id must be null prior to initiation");
         }
         if (status != null) {
-            throw new CustomerDomainException("Customer status must be null");
+            throw new CustomerDomainException("Customer status must be null prior to initiation");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            throw new CustomerDomainException("Customer username must not be blank");
+        }
+        if (familyName == null || familyName.trim().isEmpty()) {
+            throw new CustomerDomainException("Customer familyName must not be blank");
+        }
+        if (givenName == null || givenName.trim().isEmpty()) {
+            throw new CustomerDomainException("Customer givenName must not be blank");
         }
     }
 
     public void updateCustomer(String familyName, String givenName) {
-        if (familyName == null || givenName == null) {
-            throw new CustomerDomainException("familyName and givenName must not be null");
+        if (familyName == null || familyName.trim().isEmpty() || givenName == null || givenName.trim().isEmpty()) {
+            throw new CustomerDomainException("familyName and givenName must not be null or blank");
         }
-        this.familyName = familyName;
-        this.givenName = givenName;
+        this.familyName = familyName.trim();
+        this.givenName = givenName.trim();
+    }
+
+    public void updateDetails(String familyName, String givenName, Email email, PhoneNumber phoneNumber, CustomerSegment segment) {
+        updateCustomer(familyName, givenName);
+        if (email != null) {
+            this.email = email;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (segment != null) {
+            this.segment = segment;
+        }
+    }
+
+    public void assignSegment(CustomerSegment segment) {
+        this.segment = segment;
     }
 
     public void deactivateCustomer() {
@@ -49,6 +75,12 @@ public class Customer extends AggregateRoot<CustomerId> {
         status = CustomerStatus.INACTIVE;
     }
 
+    public void activateCustomer() {
+        if (status == CustomerStatus.ACTIVE) {
+            throw new CustomerDomainException("Customer is already active");
+        }
+        status = CustomerStatus.ACTIVE;
+    }
 
     public String getUsername() {
         return username;
@@ -80,19 +112,18 @@ public class Customer extends AggregateRoot<CustomerId> {
 
     private Customer(Builder builder) {
         super.setId(builder.id);
-        username = builder.username;
-        familyName = builder.familyName;
-        givenName = builder.givenName;
-        email = builder.email;
-        phoneNumber = builder.phoneNumber;
-        status = builder.status;
-        segment = builder.segment;
+        this.username = builder.username;
+        this.familyName = builder.familyName;
+        this.givenName = builder.givenName;
+        this.email = builder.email;
+        this.phoneNumber = builder.phoneNumber;
+        this.status = builder.status;
+        this.segment = builder.segment;
     }
 
     public static Builder builder() {
         return new Builder();
     }
-
 
     public static final class Builder {
         private CustomerId id;
@@ -108,42 +139,42 @@ public class Customer extends AggregateRoot<CustomerId> {
         }
 
         public Builder id(CustomerId val) {
-            id = val;
+            this.id = val;
             return this;
         }
 
         public Builder username(String val) {
-            username = val;
+            this.username = val;
             return this;
         }
 
         public Builder familyName(String val) {
-            familyName = val;
+            this.familyName = val;
             return this;
         }
 
         public Builder givenName(String val) {
-            givenName = val;
+            this.givenName = val;
             return this;
         }
 
         public Builder email(Email val) {
-            email = val;
+            this.email = val;
             return this;
         }
 
         public Builder phoneNumber(PhoneNumber val) {
-            phoneNumber = val;
+            this.phoneNumber = val;
             return this;
         }
 
         public Builder status(CustomerStatus val) {
-            status = val;
+            this.status = val;
             return this;
         }
 
         public Builder segment(CustomerSegment val) {
-            segment = val;
+            this.segment = val;
             return this;
         }
 

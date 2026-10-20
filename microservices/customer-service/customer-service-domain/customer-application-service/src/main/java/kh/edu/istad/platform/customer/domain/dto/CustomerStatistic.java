@@ -6,6 +6,7 @@ import lombok.Builder;
 @Builder
 public record CustomerStatistic(
         CustomerStatus status,
+        String segmentName,
         Long total
 ) {
 }
