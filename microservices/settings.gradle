@@ -1,5 +1,5 @@
-
 rootProject.name = 'microservices'
+includeBuild 'discovery-server'
 includeBuild 'business-service'
 includeBuild 'customer-service'
 includeBuild 'order-service'

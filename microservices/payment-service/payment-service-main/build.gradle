@@ -9,6 +9,8 @@ dependencies {
     implementation 'kh.edu.istad:payment-service-persistence'
     implementation 'kh.edu.istad:payment-service-restapi'
 
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     runtimeOnly 'org.postgresql:postgresql'
 }

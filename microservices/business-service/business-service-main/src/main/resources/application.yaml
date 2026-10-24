@@ -6,9 +6,32 @@ spring:
     name: business-service
   data:
     mongodb:
-      host: localhost
-      port: 2026
-      username: mongod
-      password: mongod
+      host: ${SPRING_DATA_MONGODB_HOST:localhost}
+      port: ${SPRING_DATA_MONGODB_PORT:2026}
+      username: ${SPRING_DATA_MONGODB_USERNAME:mongod}
+      password: ${SPRING_DATA_MONGODB_PASSWORD:mongod}
       database: db_business
       authentication-database: admin
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    healthcheck:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

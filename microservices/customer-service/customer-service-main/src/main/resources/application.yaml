@@ -2,33 +2,50 @@ server:
   port: 9091
 
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5433/ecom_db
-    username: postgres
-    password: postgres@istad
+  application:
+    name: customer-service
 
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/ecom_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres@istad}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-
     show-sql: true
-
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
   mongodb:
-    host: localhost
-    port: 2026
-    username: mongod
-    password:
-      - m
-      - o
-      - n
-      - g
-      - o
-      - d
+    host: ${SPRING_DATA_MONGODB_HOST:localhost}
+    port: ${SPRING_DATA_MONGODB_PORT:2026}
+    username: ${SPRING_DATA_MONGODB_USERNAME:mongod}
+    password: ${SPRING_DATA_MONGODB_PASSWORD:mongod}
     database: db_customer
     authentication-database: admin
 
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    healthcheck:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

@@ -4,11 +4,13 @@ server:
 spring:
   application:
     name: order-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5433/ecom_db
-    username: postgres
-    password: postgres@istad
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/ecom_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres@istad}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,3 +18,37 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Inter-Service Communication Settings
+ecommerce:
+  communication:
+    # Set to 'hardcoded' for Part 1 Testing
+    # Set to 'eureka' for Part 3 & 4 Testing (Eureka Service Discovery + Client-Side Load Balancing)
+    mode: eureka
+  services:
+    customer-url: http://localhost:9091
+    business-url: http://localhost:9093
+    payment-url: http://localhost:9094
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    healthcheck:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
