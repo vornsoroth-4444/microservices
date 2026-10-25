@@ -68,7 +68,7 @@ public class CustomerController {
         return updateCustomer(customerId, request);
     }
 
-    @PatchMapping("/{customerId}/deactivate")
+    @RequestMapping(value = "/{customerId}/deactivate", method = {RequestMethod.PATCH, RequestMethod.PUT, RequestMethod.POST})
     public CustomerDeactivateInitiateResponse deactivateInitiateResponse(
             @PathVariable("customerId") UUID customerId
     ){

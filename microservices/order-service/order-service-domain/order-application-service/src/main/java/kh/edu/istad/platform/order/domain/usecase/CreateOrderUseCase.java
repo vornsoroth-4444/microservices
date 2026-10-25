@@ -7,6 +7,7 @@ import kh.edu.istad.platform.order.domain.dto.client.CustomerClientModel;
 import kh.edu.istad.platform.order.domain.dto.client.PaymentClientModel;
 import kh.edu.istad.platform.order.domain.entity.Order;
 import kh.edu.istad.platform.order.domain.event.OrderCreatedEvent;
+import kh.edu.istad.platform.order.domain.exception.CustomerInactiveException;
 import kh.edu.istad.platform.order.domain.exception.OrderDomainException;
 import kh.edu.istad.platform.order.domain.mapper.OrderDataMapper;
 import kh.edu.istad.platform.order.domain.port.out.BusinessClientPort;
@@ -41,7 +42,7 @@ public class CreateOrderUseCase {
         CustomerClientModel customer = customerClientPort.getCustomer(command.customerId().value())
                 .orElseThrow(() -> new OrderDomainException("Customer not found with id: " + command.customerId().value()));
         if (!customer.isActive()) {
-            throw new OrderDomainException("Customer " + command.customerId().value() + " is inactive!");
+            throw new CustomerInactiveException("Customer " + command.customerId().value() + " is inactive!");
         }
         log.info("[ORDER-SERVICE] Customer {} validated successfully (name: {} {})",
                 customer.customerId(), customer.givenName(), customer.familyName());

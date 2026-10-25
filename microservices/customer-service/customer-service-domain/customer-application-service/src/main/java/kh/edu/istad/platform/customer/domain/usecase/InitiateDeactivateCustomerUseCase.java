@@ -1,5 +1,6 @@
 package kh.edu.istad.platform.customer.domain.usecase;
 
+import kh.edu.istad.common.domain.valueobject.CustomerId;
 import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerCommand;
 import kh.edu.istad.platform.customer.domain.dto.InitiateDeactivateCustomerResult;
 import kh.edu.istad.platform.customer.domain.port.out.CustomerRepository;
@@ -21,6 +22,10 @@ public class InitiateDeactivateCustomerUseCase {
 
     public InitiateDeactivateCustomerResult execute(InitiateDeactivateCustomerCommand command) {
         log.info("initiate deactivate customer usecase: {}", command);
+        customerRepository.findById(new CustomerId(command.customerId())).ifPresent(customer -> {
+            customer.deactivateCustomer();
+            customerRepository.save(customer);
+        });
         return new InitiateDeactivateCustomerResult(
                 command.customerId(),
                 ZonedDateTime.now(ZoneId.of("UTC"))

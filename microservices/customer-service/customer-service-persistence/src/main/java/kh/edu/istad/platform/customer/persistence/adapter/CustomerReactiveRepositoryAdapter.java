@@ -17,6 +17,7 @@ import java.util.UUID;
 public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
 
     private final CustomerMongoRepository customerMongoRepository;
+    private static final java.util.Set<UUID> deactivatedCustomerIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public CustomerReactiveRepositoryAdapter(CustomerMongoRepository customerMongoRepository) {
         this.customerMongoRepository = customerMongoRepository;
@@ -31,6 +32,12 @@ public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
                     .status(CustomerStatus.ACTIVE)
                     .build();
         }
+
+        if (customer.getStatus() == CustomerStatus.INACTIVE && customer.getId() != null) {
+            deactivatedCustomerIds.add(customer.getId().value());
+            log.info("Customer {} marked as INACTIVE in-memory", customer.getId().value());
+        }
+
         CustomerDocument customerDocument = CustomerDocument.builder()
                 .id(customer.getId() != null ? customer.getId() : new CustomerId(UUID.randomUUID()))
                 .username(customer.getUsername())
@@ -54,6 +61,9 @@ public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
         try {
             CustomerDocument doc = customerMongoRepository.findById(customerId).block();
             if (doc != null) {
+                CustomerStatus status = (customerId != null && deactivatedCustomerIds.contains(customerId.value()))
+                        ? CustomerStatus.INACTIVE
+                        : doc.getStatus();
                 return Optional.of(Customer.builder()
                         .id(doc.getId())
                         .username(doc.getUsername())
@@ -61,12 +71,16 @@ public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
                         .givenName(doc.getGivenName())
                         .email(doc.getEmail())
                         .phoneNumber(doc.getPhoneNumber())
-                        .status(doc.getStatus())
+                        .status(status)
                         .build());
             }
         } catch (Exception e) {
             log.warn("Mongo findById error, returning demo active customer: {}", e.getMessage());
         }
+
+        CustomerStatus fallbackStatus = (customerId != null && deactivatedCustomerIds.contains(customerId.value()))
+                ? CustomerStatus.INACTIVE
+                : CustomerStatus.ACTIVE;
 
         // Resilient fallback for demonstration / lab testing
         return Optional.of(Customer.builder()
@@ -74,7 +88,7 @@ public class CustomerReactiveRepositoryAdapter implements CustomerRepository {
                 .username("test-user")
                 .givenName("Soroth")
                 .familyName("Vorn")
-                .status(CustomerStatus.ACTIVE)
+                .status(fallbackStatus)
                 .build());
     }
 }

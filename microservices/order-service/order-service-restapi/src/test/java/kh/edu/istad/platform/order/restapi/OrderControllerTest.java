@@ -3,6 +3,7 @@ package kh.edu.istad.platform.order.restapi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kh.edu.istad.platform.order.domain.dto.CreateOrderCommand;
 import kh.edu.istad.platform.order.domain.dto.CreateOrderResult;
+import kh.edu.istad.platform.order.domain.exception.CustomerInactiveException;
 import kh.edu.istad.platform.order.domain.usecase.CreateOrderUseCase;
 import kh.edu.istad.platform.order.domain.usecase.TrackOrderUseCase;
 import kh.edu.istad.platform.order.domain.valueobject.OrderStatus;
@@ -116,5 +117,38 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testCreateOrder_CustomerInactive_Returns503ServiceUnavailable() throws Exception {
+        UUID customerId = UUID.randomUUID();
+        when(createOrderUseCase.execute(any(CreateOrderCommand.class)))
+                .thenThrow(new CustomerInactiveException("Customer " + customerId + " is inactive!"));
+
+        CreateOrderRequest request = CreateOrderRequest.builder()
+                .customerId(customerId)
+                .businessId(UUID.randomUUID())
+                .price(new BigDecimal("45.00"))
+                .deliveryAddress(StreetAddressRequest.builder()
+                        .street("St 271")
+                        .postalCode("12300")
+                        .city("Phnom Penh")
+                        .build())
+                .items(List.of(
+                        OrderItemRequest.builder()
+                                .productId(UUID.randomUUID())
+                                .quantity(1)
+                                .price(new BigDecimal("45.00"))
+                                .subTotal(new BigDecimal("45.00"))
+                                .build()
+                ))
+                .build();
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("Service Unavailable"))
+                .andExpect(jsonPath("$.message").value("Customer " + customerId + " is inactive!"));
     }
 }
