@@ -2,6 +2,17 @@ server:
   port: 9091
 
 spring:
+  application:
+    name: customer-service
+
+  cloud:
+    consul:
+      discovery:
+        health-check-url: http://host.docker.internal:${server.port}/actuator/health
+        service-name: customer-service
+        instance-id: ${spring.application.name}-${random.value}
+        prefer-ip-address: true
+
   datasource:
     url: jdbc:postgresql://localhost:5433/ecom_db
     username: postgres

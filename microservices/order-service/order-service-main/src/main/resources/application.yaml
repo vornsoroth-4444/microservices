@@ -1,2 +1,14 @@
 server:
   port: 9092
+
+spring:
+  application:
+    name: order-service
+
+  cloud:
+    consul:
+      discovery:
+        health-check-url: http://host.docker.internal:${server.port}/actuator/health
+        service-name: order-service
+        instance-id: ${spring.application.name}-${random.value}
+        prefer-ip-address: true
