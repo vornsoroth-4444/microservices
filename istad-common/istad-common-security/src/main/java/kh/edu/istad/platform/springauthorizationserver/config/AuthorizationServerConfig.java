@@ -132,6 +132,22 @@ public class AuthorizationServerConfig {
 
                 registeredClientRepository.save(oidcClient);
             }
+
+            if (registeredClientRepository.findByClientId("customer-client") == null) {
+                RegisteredClient customerClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("customer-client")
+                        .clientSecret("{noop}secret")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .scope("read")
+                        .scope("write")
+                        .tokenSettings(TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(30))
+                                .build())
+                        .build();
+
+                registeredClientRepository.save(customerClient);
+            }
         };
     }
 

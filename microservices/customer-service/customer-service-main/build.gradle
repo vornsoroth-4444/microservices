@@ -17,10 +17,13 @@ dependencies {
     implementation 'kh.edu.istad:customer-service-restapi'
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 //    runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 dependencyManagement {
     imports {

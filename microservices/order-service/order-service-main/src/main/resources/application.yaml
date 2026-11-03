@@ -35,12 +35,25 @@ spring:
     password: qwerqwer
     driver-class-name: org.postgresql.Driver
 
+  security:
+    oauth2:
+      client:
+        registration:
+          customer-client:
+            client-id: customer-client
+            client-secret: secret
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_basic
+            scope:
+              - read
+              - write
+        provider:
+          customer-client:
+            token-uri: http://localhost:9000/oauth2/token
+            issuer-uri: http://localhost:9000
 
-#  http:
-#    serviceclient:
-#        customer-service:
-#          connect-timeout:
-#            seconds: 5
-#          read-timeout:
-#            seconds: 10
-#          base-url: http://customer-service
+service:
+  customer:
+    base-url: http://customer-service
+  business:
+    base-url: http://business-service

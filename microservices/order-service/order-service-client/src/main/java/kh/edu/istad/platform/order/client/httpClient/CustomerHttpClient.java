@@ -1,21 +1,33 @@
 package kh.edu.istad.platform.order.client.httpClient;
 
+import kh.edu.istad.platform.order.domain.dto.CustomerResponse;
 import kh.edu.istad.platform.order.domain.dto.QueryCustomerResult;
+import org.springframework.security.oauth2.client.annotation.ClientRegistrationId;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.service.annotation.PostExchange;
+
+import java.util.List;
 
 @HttpExchange("api/customers")
+@ClientRegistrationId("customer-client")
 public interface CustomerHttpClient {
+
     @GetExchange
-    Flux<QueryCustomerResult> queryCustomer();
+    @ClientRegistrationId("customer-client")
+    List<QueryCustomerResult> queryCustomer();
+
+    @GetExchange("/{customerId}")
+    @ClientRegistrationId("customer-client")
+    CustomerResponse getCustomer(@PathVariable("customerId") String customerId);
 
     @GetExchange("/{id}")
-    Mono<QueryCustomerResult> getCustomerById(@PathVariable String id);
+    @ClientRegistrationId("customer-client")
+    CustomerResponse getCustomerById(@PathVariable("id") String id);
 
-    @GetExchange
-    Mono<Void> createCustomer(@RequestBody QueryCustomerResult customer);
+    @PostExchange
+    @ClientRegistrationId("customer-client")
+    void createCustomer(@RequestBody QueryCustomerResult customer);
 }

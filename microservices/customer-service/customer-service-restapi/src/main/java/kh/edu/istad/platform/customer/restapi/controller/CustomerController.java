@@ -28,7 +28,7 @@ public class CustomerController {
     private final CreateCustomerUseCase createCustomerUseCase;
     private final QueryCustomerUseCase queryCustomerUseCase;
 
-//    @ResponseStatus(HttpStatus.CREATED)
+
 //    @PostMapping
 //    public CustomerInitiateResponse initiateCustomer(
 //            @RequestBody CustomerInitiateRequest customerInitiateRequest

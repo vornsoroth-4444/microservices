@@ -13,6 +13,12 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
         prefer-ip-address: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+
   datasource:
     url: jdbc:postgresql://localhost:5433/ecom_db
     username: postgres
@@ -42,4 +48,3 @@ spring:
       - d
     database: db_customer
     authentication-database: admin
-
