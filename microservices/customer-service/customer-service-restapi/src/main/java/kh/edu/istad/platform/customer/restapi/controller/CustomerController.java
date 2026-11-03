@@ -1,6 +1,7 @@
 package kh.edu.istad.platform.customer.restapi.controller;
 
 import jakarta.validation.Valid;
+import kh.edu.istad.common.domain.exception.DomainException;
 import kh.edu.istad.platform.customer.domain.dto.*;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
 import kh.edu.istad.platform.customer.domain.entity.CustomerSegment;
@@ -40,12 +41,18 @@ public class CustomerController {
 //    }
 
     @GetMapping
-    public Flux<Customer> findAll(CustomerFilterRequest request){
-        if (request != null && hasAnyFilter(request)) {
-            return query(request);
-        }
+    public Flux<Customer> findAll(){
+//        throw new DomainException("Menghor good boy");
         return queryCustomerUseCase.findAll();
     }
+
+//    @GetMapping
+//    public Flux<Customer> findAll(CustomerFilterRequest request){
+//        if (request != null && hasAnyFilter(request)) {
+//            return query(request);
+//        }
+//        return queryCustomerUseCase.findAll();
+//    }
 
     @GetMapping("/segments")
     public Flux<CustomerSegment> findAllSegments() {

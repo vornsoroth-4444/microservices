@@ -8,6 +8,7 @@ ext {
 }
 
 dependencies {
+    implementation 'kh.edu.istad:istad-common-swagger'
 
     implementation 'kh.edu.istad:customer-domain-core'
     implementation 'kh.edu.istad:customer-application-service'

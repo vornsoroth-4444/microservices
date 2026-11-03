@@ -4,4 +4,15 @@ plugins {
 
 dependencies {
     api 'kh.edu.istad:order-application-service'
+
+    implementation 'org.springframework.boot:spring-boot-starter-webclient'
+    testImplementation 'io.projectreactor:reactor-test'
+
+    implementation libs.spring.boot.starter.data.r2dbc
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.postgresql:r2dbc-postgresql'
+
+
+
 }

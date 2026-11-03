@@ -26,7 +26,7 @@ public interface CustomerPersistenceMapper {
     @Mapping(source = "email", target = "email.value")
     @Mapping(source = "phoneNumber", target = "phoneNumber.value")
     Customer toDomain(CustomerDocument customerDocument);
-
+    
     CustomerSegmentDocument toSegmentDocument(CustomerSegment segment);
 
     CustomerSegment toSegmentDomain(CustomerSegmentDocument document);

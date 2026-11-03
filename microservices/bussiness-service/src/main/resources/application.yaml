@@ -1,0 +1,13 @@
+server:
+  port: 9097
+
+spring:
+  application:
+    name: bussiness-service
+  cloud:
+    consul:
+      discovery:
+        health-check-url: http://host.docker.internal:${server.port}/actuator/health
+        service-name: bussiness-service
+        instance-id: ${spring.application.name}-${random.value}
+        prefer-ip-address: true
