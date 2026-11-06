@@ -23,18 +23,14 @@ spring:
                 - Path=/my-orders/**
               filters:
                 - RewritePath=/my-orders/?(?<segment>.*), /$\{segment}
-#            - id: json-placeholder
-#              uri: https://jsonplaceholder.typicode.com
-#              predicates:
-#                - Path=/jph/**
-#              filters:
-#                - RewritePath=/jph/?(?<segment>.*), /$\{segment}
-            - id: docs
-              uri: https://localhost:3001
+            - id: json-placeholder
+              uri: https://jsonplaceholder.typicode.com
               predicates:
-                - Path=/**
-            - id: web
-              uri: https://localhost:3000
+                - Path=/jph/**
+              filters:
+                - RewritePath=/jph/?(?<segment>.*), /$\{segment}
+            - id: frontend
+              uri: http://localhost:3000
               predicates:
                 - Path=/**
     consul:
@@ -42,7 +38,7 @@ spring:
         health-check-url: http://host.docker.internal:${server.port}/actuator/health
         service-name: gateway-server
         instance-id: ${spring.application.name}-${random.value}
-#        prefer-ip-address: true
+        prefer-ip-address: true
 
 #actuator:
 management:
