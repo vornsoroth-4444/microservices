@@ -1,20 +1,25 @@
 spring:
   application:
     name: iam-service
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../../.env[.properties]
+      - optional:file:microservices/iam-service/.env[.properties]
   security:
     oauth2:
       client:
         registration:
           github:
             provider: github
-            client-id: ${GITHUB_CLIENT_ID:your-github-client-id}
-            client-secret: ${GITHUB_CLIENT_SECRET:your-github-client-secret}
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
             client-name: GitHub
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
           google:
             provider: google
-            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             client-name: Google
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
