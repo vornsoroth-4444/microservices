@@ -1,0 +1,17 @@
+plugins {
+    id 'spring-common-conventions'
+}
+
+def grpcVersion = libs.versions.grpc.get()
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'kh.edu.istad:istad-common-grpc'
+    implementation 'kh.edu.istad:customer-domain-core'
+    implementation 'kh.edu.istad:customer-application-service'
+    implementation 'io.projectreactor:reactor-core'
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}

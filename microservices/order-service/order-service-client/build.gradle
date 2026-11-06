@@ -3,9 +3,16 @@ plugins {
     id 'spring-cloud-common-conventions'
 }
 
+def grpcVersion = libs.versions.grpc.get()
+
 dependencies {
+    implementation 'kh.edu.istad:istad-common-grpc'
     implementation "kh.edu.istad:order-application-service"
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-webclient'
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "io.grpc:grpc-inprocess:${grpcVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

@@ -15,6 +15,7 @@ dependencies {
     implementation 'kh.edu.istad:customer-service-message'
     implementation 'kh.edu.istad:customer-service-persistence'
     implementation 'kh.edu.istad:customer-service-restapi'
+    implementation 'kh.edu.istad:customer-service-grpc'
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 //    runtimeOnly 'com.h2database:h2'

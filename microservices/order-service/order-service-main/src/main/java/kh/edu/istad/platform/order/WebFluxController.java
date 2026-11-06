@@ -7,6 +7,7 @@ import kh.edu.istad.platform.order.domain.port.out.client.CustomerServiceClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,6 +34,16 @@ public class  WebFluxController {
     @GetMapping("/customers/query")
     public Flux<QueryCustomerResult> queryCustomer() {
         return customerServiceClient.queryCustomers();
+    }
+
+    @GetMapping("/grpc/customers")
+    public Flux<GetCustomerResult> getCustomersViaGrpc() {
+        return customerServiceClient.listCustomersGrpc();
+    }
+
+    @GetMapping("/grpc/customers/{id}")
+    public Mono<GetCustomerResult> getCustomerViaGrpc(@PathVariable String id) {
+        return customerServiceClient.getCustomerGrpc(id);
     }
 
     @GetMapping("/Flux")

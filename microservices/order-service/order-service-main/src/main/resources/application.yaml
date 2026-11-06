@@ -44,3 +44,9 @@ spring:
 #          read-timeout:
 #            seconds: 10
 #          base-url: http://customer-service
+
+grpc:
+  client:
+    customer-service:
+      host: localhost
+      port: 9191

@@ -4,12 +4,16 @@ java-lqnguage-version = "25"
 spring-boot-gradle-plugin = "4.1.1"
 dependency-management-plugin = "1.1.7"
 spring-doc-openapi = "3.2.0"
+grpc = "1.83.1"
+protobuf = "3.25.5"
+istad-proto = "1.83.1.2.20261106075501.db336760fb0e"
 
 [libraries]
 spring-boot-gradle-plugin ={module = "org.springframework.boot:spring-boot-gradle-plugin",version.ref = "spring-boot-gradle-plugin"}
 dependency-management-plugin = {module = "io.spring.gradle:dependency-management-plugin",version.ref = "dependency-management-plugin"}
 spring-boot-starter-data-r2dbc = {module = "org.springframework.boot:spring-boot-starter-data-r2dbc"}
 springdoc-openapi-starter-webmvc-ui = {module = "org.springdoc:springdoc-openapi-starter-webmvc-ui",version.ref = "spring-doc-openapi"}
+istad-proto-grpc = {module = "build.buf.gen:istad-ite-project_istad-proto_grpc_java", version.ref = "istad-proto"}
 
 
 [bundles]

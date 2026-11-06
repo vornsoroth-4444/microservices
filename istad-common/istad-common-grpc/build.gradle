@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'kh.edu.istad'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.lqnguage.version.get())
+    }
+}
+
+def grpcVersion = libs.versions.grpc.get()
+def protobufVersion = libs.versions.protobuf.get()
+
+dependencies {
+    api libs.istad.proto.grpc
+    api "io.grpc:grpc-stub:${grpcVersion}"
+    api "io.grpc:grpc-protobuf:${grpcVersion}"
+    api "com.google.protobuf:protobuf-java:${protobufVersion}"
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+}

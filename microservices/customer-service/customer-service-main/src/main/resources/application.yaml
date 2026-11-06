@@ -43,3 +43,8 @@ spring:
     database: db_customer
     authentication-database: admin
 
+grpc:
+  server:
+    port: 9191
+
+

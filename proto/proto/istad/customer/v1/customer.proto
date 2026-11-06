@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package istad.customer.v1;
+
+option java_multiple_files = true;
+option java_package = "kh.edu.istad.platform.proto";
+
+enum CustomerStatus {
+  CUSTOMER_STATUS_UNSPECIFIED = 0;
+  CUSTOMER_STATUS_ACTIVE = 1;
+  CUSTOMER_STATUS_INACTIVE = 2;
+}
+
+message Customer {
+  string customer_id = 1;
+  string username = 2;
+  string family_name = 3;
+  string given_name = 4;
+  string email = 5;
+  string phone_number = 6;
+  CustomerStatus status = 7;
+}
+
+message GetCustomerRequest {
+  string customer_id = 1;
+}
+message GetCustomerResponse {
+  Customer customer = 1;
+}
+
+message ListCustomersRequest {
+  string keyword = 1;
+  CustomerStatus status = 2;
+  int32 page = 3;
+  int32 size = 4;
+}
+message ListCustomersResponse {
+  Customer customer = 1;
+}
+
+message CreateCustomerRequest {
+  string username = 1;
+  string family_name = 2;
+  string given_name = 3;
+  string email = 4;
+  string phone_number = 5;
+}
+message CreateCustomerResponse {
+  Customer customer = 1;
+}
+
+service CustomerService {
+  rpc GetCustomer(GetCustomerRequest) returns (GetCustomerResponse);
+  rpc ListCustomers(ListCustomersRequest) returns (stream ListCustomersResponse);
+  rpc CreateCustomer(CreateCustomerRequest) returns (CreateCustomerResponse);
+}
