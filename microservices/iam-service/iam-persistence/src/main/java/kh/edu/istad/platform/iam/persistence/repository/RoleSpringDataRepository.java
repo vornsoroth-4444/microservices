@@ -1,0 +1,14 @@
+package kh.edu.istad.platform.iam.persistence.repository;
+
+import kh.edu.istad.platform.iam.persistence.entity.RoleJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface RoleSpringDataRepository extends JpaRepository<RoleJpaEntity, Long>, JpaSpecificationExecutor<RoleJpaEntity> {
+    Optional<RoleJpaEntity> findByUuid(UUID uuid);
+    Optional<RoleJpaEntity> findByName(String name);
+    boolean existsByName(String name);
+}

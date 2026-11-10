@@ -1,0 +1,996 @@
+{
+  "info": {
+    "_postman_id": "7f8b919d-161e-450a-8bf7-e17f0a719294",
+    "name": "IAM Service (Spring Authorization Server & IAM)",
+    "description": "Comprehensive Postman collection for ISTAD IAM Service covering OAuth 2.1 / OpenID Connect 1.0, Dynamic Client Registration (RFC 7591), and the secured REST API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "iam-client",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "iam-secret",
+      "type": "string"
+    },
+    {
+      "key": "registrationAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "registeredClientId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "permissionUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "identityUuid",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. OAuth 2.1 & OIDC",
+      "item": [
+        {
+          "name": "OIDC Discovery Metadata",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/.well-known/openid-configuration",
+              "host": ["{{baseUrl}}"],
+              "path": [".well-known", "openid-configuration"]
+            }
+          }
+        },
+        {
+          "name": "JSON Web Key Set (JWKS)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/jwks",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "jwks"]
+            }
+          }
+        },
+        {
+          "name": "Token - Client Credentials Grant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{clientId}}", "type": "string" },
+                { "key": "password", "value": "{{clientSecret}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials", "type": "text" },
+                { "key": "scope", "value": "openid profile email phone address client.create user:read user:create user:update user:delete user:assign role:read role:create role:update role:delete role:assign permission:read permission:create permission:update permission:delete", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dynamic Client Registration (RFC 7591)",
+      "item": [
+        {
+          "name": "Register Client (POST /connect/register)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.client_id) {",
+                  "    pm.collectionVariables.set('registeredClientId', jsonData.client_id);",
+                  "}",
+                  "if (jsonData.registration_access_token) {",
+                  "    pm.collectionVariables.set('registrationAccessToken', jsonData.registration_access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"client_name\": \"ISTAD E-Commerce Web\",\n    \"redirect_uris\": [\"http://localhost:8081/login/oauth2/code/iam\"],\n    \"grant_types\": [\"authorization_code\", \"refresh_token\"],\n    \"response_types\": [\"code\"],\n    \"scope\": \"openid profile email\",\n    \"token_endpoint_auth_method\": \"client_secret_basic\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/connect/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["connect", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Client Metadata (GET /connect/register)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{registrationAccessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/connect/register?client_id={{registeredClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connect", "register"],
+              "query": [
+                { "key": "client_id", "value": "{{registeredClientId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Public Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"sokdara\",\n    \"email\": \"dara.sok@istad.co\",\n    \"password\": \"Str0ng!Pass2026\",\n    \"confirmPassword\": \"Str0ng!Pass2026\",\n    \"givenName\": \"Dara\",\n    \"familyName\": \"Sok\",\n    \"locale\": \"km\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Current User (/api/me)",
+      "item": [
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Current User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"givenName\": \"Dara\",\n    \"nickname\": \"Dara\",\n    \"phoneNumber\": \"+85512345678\",\n    \"locale\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            }
+          }
+        },
+        {
+          "name": "Change Current User Password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"Str0ng!Pass2026\",\n    \"newPassword\": \"N3w!Pass2026\",\n    \"confirmPassword\": \"N3w!Pass2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "password"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Linked Identities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (Array.isArray(jsonData) && jsonData.length > 0) {",
+                  "    pm.collectionVariables.set('identityUuid', jsonData[0].uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/identities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "identities"]
+            }
+          }
+        },
+        {
+          "name": "Unlink Current User Identity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/identities/{{identityUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "identities", "{{identityUuid}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Users Management (/api/users)",
+      "item": [
+        {
+          "name": "List Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.content && jsonData.content.length > 0) {",
+                  "    pm.collectionVariables.set('userUuid', jsonData.content[0].uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"sokdara\",\n    \"email\": \"dara.sok@istad.co\",\n    \"password\": \"Str0ng!Pass2026\",\n    \"givenName\": \"Dara\",\n    \"familyName\": \"Sok\",\n    \"gender\": \"male\",\n    \"birthdate\": \"2003-05-20\",\n    \"phoneNumber\": \"+85512345678\",\n    \"zoneinfo\": \"Asia/Phnom_Penh\",\n    \"locale\": \"km\",\n    \"address\": {\n        \"streetAddress\": \"No. 24, St. 562\",\n        \"locality\": \"Toul Kork\",\n        \"region\": \"Phnom Penh\",\n        \"postalCode\": \"120408\",\n        \"country\": \"KH\"\n    },\n    \"roleUuids\": [\"{{roleUuid}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by UUID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"givenName\": \"Dara\",\n    \"nickname\": \"Dara\",\n    \"phoneNumber\": \"+85512345678\",\n    \"locale\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Enable User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/enable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "enable"]
+            }
+          }
+        },
+        {
+          "name": "Disable User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/disable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "disable"]
+            }
+          }
+        },
+        {
+          "name": "Lock User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "lock"]
+            }
+          }
+        },
+        {
+          "name": "Unlock User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/unlock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "unlock"]
+            }
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newPassword\": \"Str0ng!Pass2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "password"]
+            }
+          }
+        },
+        {
+          "name": "Get User Authorities & Effective Permissions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/authorities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "authorities"]
+            }
+          }
+        },
+        {
+          "name": "Assign Roles to User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roleUuids\": [\"{{roleUuid}}\"],\n    \"expiresAt\": \"2026-12-31T23:59:59Z\",\n    \"reason\": \"Temporary admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Role from User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/roles/{{roleUuid}}?reason=Revoked+by+admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "roles", "{{roleUuid}}"],
+              "query": [
+                { "key": "reason", "value": "Revoked by admin" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Grant Direct Permissions to User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"permissionUuids\": [\"{{permissionUuid}}\"],\n    \"effect\": \"GRANT\",\n    \"reason\": \"Needs to read reports\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Direct Permission from User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/permissions/{{permissionUuid}}?reason=Revoked+by+admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "permissions", "{{permissionUuid}}"],
+              "query": [
+                { "key": "reason", "value": "Revoked by admin" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List User Identities",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/identities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "identities"]
+            }
+          }
+        },
+        {
+          "name": "Unlink User Identity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/identities/{{identityUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "identities", "{{identityUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Soft Delete User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Roles Management (/api/roles)",
+      "item": [
+        {
+          "name": "List Roles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.content && jsonData.content.length > 0) {",
+                  "    pm.collectionVariables.set('roleUuid', jsonData.content[0].uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"CONTENT_MANAGER\",\n    \"description\": \"Manages course content\",\n    \"permissionUuids\": [\"{{permissionUuid}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role by UUID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"description\": \"Updated role description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Activate Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "Assign Permissions to Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"permissionUuids\": [\"{{permissionUuid}}\"],\n    \"expiresAt\": \"2026-12-31T23:59:59Z\",\n    \"reason\": \"Role permission assignment\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Permission from Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/permissions/{{permissionUuid}}?reason=Revoked+by+admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "permissions", "{{permissionUuid}}"],
+              "query": [
+                { "key": "reason", "value": "Revoked by admin" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Permissions Management (/api/permissions)",
+      "item": [
+        {
+          "name": "List Permissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.content && jsonData.content.length > 0) {",
+                  "    pm.collectionVariables.set('permissionUuid', jsonData.content[0].uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions?page=0&size=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Custom Permission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"resource\": \"course\",\n    \"action\": \"publish\",\n    \"description\": \"Publish a course\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission by UUID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"resource\": \"course\",\n    \"action\": \"publish\",\n    \"description\": \"Updated course publish permission\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Activate Permission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Permission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
