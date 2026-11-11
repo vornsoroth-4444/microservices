@@ -40,6 +40,28 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
         prefer-ip-address: true
 
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:39000
+      client:
+        provider:
+          iam-service:
+            issuer-uri: http://localhost:39000
+        registration:
+          front-bff-client:
+            provider: iam-service
+            client-id: front-bff-client
+            client-authentication-method: none
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/front-bff-client"
+            scope:
+              - openid
+              - profile
+
+
 #actuator:
 management:
   endpoints:

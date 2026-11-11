@@ -4,6 +4,7 @@ spring:
   config:
     import:
       - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
       - optional:file:../../.env[.properties]
       - optional:file:microservices/iam-service/.env[.properties]
   security:
@@ -23,11 +24,13 @@ spring:
             client-name: Google
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
+
         provider:
           google:
+          github:
 
       authorizationserver:
-        issuer: http://localhost:9000
+        issuer: http://localhost:39000
   datasource:
     url: jdbc:postgresql://localhost:9543/db_oauth2
     username: iteuser
@@ -45,7 +48,7 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
 
 server:
-  port: 9000
+  port: 39000
 
 logging:
   level:
