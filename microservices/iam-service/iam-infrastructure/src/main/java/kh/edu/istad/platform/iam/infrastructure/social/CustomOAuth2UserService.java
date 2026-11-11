@@ -93,15 +93,24 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             authorities.add(new SimpleGrantedAuthority(auth));
         }
 
+        Map<String, Object> enhancedAttributes = new HashMap<>(attributes);
+        if (authResult.getUser() != null) {
+            enhancedAttributes.put("userUuid", authResult.getUser().getUuid().toString());
+            enhancedAttributes.put("username", authResult.getUser().getUsername());
+            if (authResult.getUser().getEmail() != null) {
+                enhancedAttributes.putIfAbsent("email", authResult.getUser().getEmail());
+            }
+        }
+
         String nameAttributeKey = userRequest.getClientRegistration().getProviderDetails()
                 .getUserInfoEndpoint().getUserNameAttributeName();
-        if (nameAttributeKey == null || !attributes.containsKey(nameAttributeKey)) {
+        if (nameAttributeKey == null || !enhancedAttributes.containsKey(nameAttributeKey)) {
             nameAttributeKey = "id";
-            if (!attributes.containsKey(nameAttributeKey)) {
+            if (!enhancedAttributes.containsKey(nameAttributeKey)) {
                 nameAttributeKey = "sub";
             }
         }
 
-        return new DefaultOAuth2User(authorities, attributes, nameAttributeKey);
+        return new DefaultOAuth2User(authorities, enhancedAttributes, nameAttributeKey);
     }
 }

@@ -7,6 +7,12 @@ server:
 spring:
   application:
     name: iam-service
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:microservices/iam-service/.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:file:../../.env[.properties]
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:9543/db_oauth2}

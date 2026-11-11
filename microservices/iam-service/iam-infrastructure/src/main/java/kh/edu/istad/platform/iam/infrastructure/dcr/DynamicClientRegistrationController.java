@@ -46,7 +46,11 @@ public class DynamicClientRegistrationController {
     @PostMapping
     public ResponseEntity<OidcClientRegistrationResponse> registerClient(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody OidcClientRegistrationRequest request) {
+            @RequestBody(required = false) OidcClientRegistrationRequest request) {
+
+        if (request == null) {
+            request = new OidcClientRegistrationRequest();
+        }
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing initial access token");
@@ -72,11 +76,13 @@ public class DynamicClientRegistrationController {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST);
 
-        if (request.getRedirectUris() != null) {
+        if (request.getRedirectUris() != null && !request.getRedirectUris().isEmpty()) {
             request.getRedirectUris().forEach(builder::redirectUri);
+        } else {
+            builder.redirectUri("https://oauth.pstmn.io/v1/callback");
         }
 
-        if (request.getGrantTypes() != null) {
+        if (request.getGrantTypes() != null && !request.getGrantTypes().isEmpty()) {
             for (String gt : request.getGrantTypes()) {
                 if ("authorization_code".equalsIgnoreCase(gt)) {
                     builder.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE);

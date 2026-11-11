@@ -37,7 +37,7 @@ public class ProfileController {
         this.updateUserProfileUseCase = updateUserProfileUseCase;
     }
 
-    @GetMapping("/")
+    @GetMapping({"/", "/profile"})
     public String home(Authentication auth,
                        @RequestParam(name = "updated", required = false) String updated,
                        @RequestParam(name = "passwordChanged", required = false) String passwordChanged,

@@ -3,21 +3,53 @@ package kh.edu.istad.platform.iam;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class WebPagesIntegrationTest {
+class WebPagesIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    @DisplayName("GET / unauthenticated redirects to login")
+    void testHomeUnauthenticatedRedirectsToLogin() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    @DisplayName("GET /profile unauthenticated redirects to login")
+    void testProfileUnauthenticatedRedirectsToLogin() throws Exception {
+        mockMvc.perform(get("/profile"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    @DisplayName("GET / authenticated with admin renders profile overview")
+    void testHomeAuthenticatedWithAdmin() throws Exception {
+        mockMvc.perform(get("/").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("admin")))
+                .andExpect(content().string(containsString("Overview")));
+    }
+
+    @Test
+    @DisplayName("GET /profile authenticated with admin renders profile overview")
+    void testProfileAuthenticatedWithAdmin() throws Exception {
+        mockMvc.perform(get("/profile").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("admin")))
+                .andExpect(content().string(containsString("Overview")));
+    }
 
     @Test
     @DisplayName("GET /login in English renders English sign in page")

@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import kh.edu.istad.platform.iam.infrastructure.social.CustomOAuth2UserService;
+import kh.edu.istad.platform.iam.infrastructure.social.CustomOidcUserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -77,9 +78,10 @@ public class AuthorizationServerConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
-                                                         CustomOAuth2UserService customOAuth2UserService) throws Exception {
+                                                         CustomOAuth2UserService customOAuth2UserService,
+                                                         CustomOidcUserService customOidcUserService) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/connect/register/**"))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/login",
@@ -103,7 +105,10 @@ public class AuthorizationServerConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .defaultSuccessUrl("/", true)
-                        .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
+                        .userInfoEndpoint(ui -> ui
+                                .userService(customOAuth2UserService)
+                                .oidcUserService(customOidcUserService)
+                        )
                 )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
