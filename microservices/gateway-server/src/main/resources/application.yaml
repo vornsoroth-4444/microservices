@@ -12,6 +12,8 @@ spring:
         webflux:
           default-filters:
             - SaveSession
+            - TokenRelay=
+          trusted-proxies: ".*"
           discovery:
             locator:
               enabled: true
@@ -29,10 +31,10 @@ spring:
                 - Path=/jph/**
               filters:
                 - RewritePath=/jph/?(?<segment>.*), /$\{segment}
-            - id: frontend
-              uri: http://localhost:3000
-              predicates:
-                - Path=/**
+#            - id: frontend
+#              uri: http://localhost:3000
+#              predicates:
+#                - Path=/**
     consul:
       discovery:
         health-check-url: http://host.docker.internal:${server.port}/actuator/health
@@ -71,3 +73,25 @@ management:
   endpoint:
     gateway:
       access: read_only
+
+scalar:
+  sources:
+    - title: Order Service
+      url: /order-service/v3/api-docs
+    - title: Bussiness Service
+      url: /bussiness-service/v3/api-docs
+  enabled: true
+
+#springdoc:
+#  swagger-ui:
+#    urls:
+#      - name: Order Service
+#        url: /order-service/v3/api-docs
+#      - name: Bussiness Service
+#        url: /bussiness-service/v3/api-docs
+#    enabled: true
+#  api-docs:
+#    enabled: true
+
+
+

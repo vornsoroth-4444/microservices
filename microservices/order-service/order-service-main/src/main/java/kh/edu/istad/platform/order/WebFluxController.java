@@ -6,6 +6,8 @@ import kh.edu.istad.platform.order.domain.dto.QueryCustomerResult;
 import kh.edu.istad.platform.order.domain.port.out.client.CustomerServiceClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RefreshScope
 @RestController
@@ -41,6 +44,13 @@ public class  WebFluxController {
                 .log()
                 .delayElements(Duration.ofSeconds(1));
 
+    }
+    @GetMapping("/jwt")
+    Map<String, String> demo(@AuthenticationPrincipal Jwt jwt) {
+        return Map.of(
+                "jwt", jwt.getSubject(),
+                "accessToken", jwt.getTokenValue()
+        );
     }
 
     @Value("${global.version}")
