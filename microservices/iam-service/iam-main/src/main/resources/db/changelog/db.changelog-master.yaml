@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/ddl/007-create-identities-table.sql
   - include:
       file: db/changelog/ddl/008-create-assignment-tables.sql
+  - include:
+      file: db/changelog/ddl/009-create-security-events.sql

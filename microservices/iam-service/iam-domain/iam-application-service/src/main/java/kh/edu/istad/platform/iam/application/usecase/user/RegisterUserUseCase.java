@@ -4,6 +4,7 @@ import kh.edu.istad.platform.iam.application.dto.RegisterUserCommand;
 import kh.edu.istad.platform.iam.application.dto.RoleSummary;
 import kh.edu.istad.platform.iam.application.dto.UserResult;
 import kh.edu.istad.platform.iam.application.port.out.PasswordHasher;
+import kh.edu.istad.platform.iam.application.port.out.PasswordPolicy;
 import kh.edu.istad.platform.iam.application.port.out.RoleRepository;
 import kh.edu.istad.platform.iam.application.port.out.UserRepository;
 import kh.edu.istad.platform.iam.domain.exception.ConflictException;
@@ -26,13 +27,16 @@ public class RegisterUserUseCase {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordHasher passwordHasher;
+    private final PasswordPolicy passwordPolicy;
 
     public RegisterUserUseCase(UserRepository userRepository,
                                RoleRepository roleRepository,
-                               PasswordHasher passwordHasher) {
+                               PasswordHasher passwordHasher,
+                               PasswordPolicy passwordPolicy) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHasher = passwordHasher;
+        this.passwordPolicy = passwordPolicy;
     }
 
     @Transactional
@@ -40,6 +44,7 @@ public class RegisterUserUseCase {
         if (cmd.getPassword() == null || !cmd.getPassword().equals(cmd.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
+        passwordPolicy.validate(cmd.getPassword());
 
         String normalizedEmail = cmd.getEmail().trim().toLowerCase(Locale.ROOT);
         String username = cmd.getUsername().trim();

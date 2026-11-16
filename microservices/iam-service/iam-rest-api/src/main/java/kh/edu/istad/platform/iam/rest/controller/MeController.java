@@ -67,6 +67,8 @@ public class MeController {
 
         UpdateUserProfileCommand command = UpdateUserProfileCommand.builder()
                 .userUuid(userUuid)
+                .username(request.getUsername())
+                .email(request.getEmail())
                 .givenName(request.getGivenName())
                 .familyName(request.getFamilyName())
                 .middleName(request.getMiddleName())

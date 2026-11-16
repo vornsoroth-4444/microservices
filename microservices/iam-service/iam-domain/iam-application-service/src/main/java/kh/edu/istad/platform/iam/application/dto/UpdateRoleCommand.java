@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public class UpdateRoleCommand {
     private UUID roleUuid;
+    private String name;
     private String description;
 
     public UpdateRoleCommand() {}
@@ -13,8 +14,16 @@ public class UpdateRoleCommand {
         this.description = description;
     }
 
+    public UpdateRoleCommand(UUID roleUuid, String name, String description) {
+        this.roleUuid = roleUuid;
+        this.name = name;
+        this.description = description;
+    }
+
     public UUID getRoleUuid() { return roleUuid; }
     public void setRoleUuid(UUID roleUuid) { this.roleUuid = roleUuid; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 }

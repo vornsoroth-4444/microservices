@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public class UpdateUserProfileCommand {
     private UUID userUuid;
+    private String username;
+    private String email;
     private String givenName;
     private String familyName;
     private String middleName;
@@ -27,6 +29,10 @@ public class UpdateUserProfileCommand {
 
     public UUID getUserUuid() { return userUuid; }
     public void setUserUuid(UUID userUuid) { this.userUuid = userUuid; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
     public String getGivenName() { return givenName; }
     public void setGivenName(String givenName) { this.givenName = givenName; }
     public String getFamilyName() { return familyName; }
@@ -57,6 +63,8 @@ public class UpdateUserProfileCommand {
     public static class Builder {
         private final UpdateUserProfileCommand target = new UpdateUserProfileCommand();
         public Builder userUuid(UUID userUuid) { target.setUserUuid(userUuid); return this; }
+        public Builder username(String username) { target.setUsername(username); return this; }
+        public Builder email(String email) { target.setEmail(email); return this; }
         public Builder givenName(String givenName) { target.setGivenName(givenName); return this; }
         public Builder familyName(String familyName) { target.setFamilyName(familyName); return this; }
         public Builder middleName(String middleName) { target.setMiddleName(middleName); return this; }

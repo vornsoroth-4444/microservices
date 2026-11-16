@@ -53,6 +53,7 @@ public class AuthorizationServerConfig {
                 new OAuth2AuthorizationServerConfigurer();
 
         http
+                .cors(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (authorizationServer) ->
                         authorizationServer
@@ -79,11 +80,16 @@ public class AuthorizationServerConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
                                                          CustomOAuth2UserService customOAuth2UserService,
-                                                         CustomOidcUserService customOidcUserService) throws Exception {
+                                                         CustomOidcUserService customOidcUserService,
+                                                         OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
+                                                         CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
+                                "/",
+                                "/index.html",
                                 "/login",
                                 "/register",
                                 "/login/telegram",
@@ -91,8 +97,13 @@ public class AuthorizationServerConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
+                                "/static/**",
+                                "/asset-manifest.json",
+                                "/manifest.json",
                                 "/favicon.ico",
-                                "/actuator/**"
+                                "/actuator/**",
+                                "/iam-ui/**",
+                                "/profile/**"
                         ).permitAll()
                         .requestMatchers("/api/**").permitAll() // secured by Resource Server filter chain
                         .anyRequest().authenticated()
@@ -104,7 +115,10 @@ public class AuthorizationServerConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        .authorizationEndpoint(auth -> auth
+                                .authorizationRequestResolver(customOAuth2AuthorizationRequestResolver)
+                        )
+                        .successHandler(oauth2AuthenticationSuccessHandler)
                         .userInfoEndpoint(ui -> ui
                                 .userService(customOAuth2UserService)
                                 .oidcUserService(customOidcUserService)
@@ -167,8 +181,27 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource, JdbcOperations jdbcOperations) {
+        org.springframework.security.oauth2.jwt.NimbusJwtDecoder decoder =
+                (org.springframework.security.oauth2.jwt.NimbusJwtDecoder) OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+        org.springframework.security.oauth2.core.OAuth2TokenValidator<org.springframework.security.oauth2.jwt.Jwt> notRevoked = jwt -> {
+            String tokenId = jwt.getId();
+            if (tokenId == null || tokenId.isBlank()) return org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success();
+            Boolean revoked = jdbcOperations.queryForObject("SELECT EXISTS(SELECT 1 FROM iam_revoked_token WHERE jti = ? AND expires_at > CURRENT_TIMESTAMP)", Boolean.class, tokenId);
+            if (Boolean.TRUE.equals(revoked)) {
+                return org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.failure(
+                        new org.springframework.security.oauth2.core.OAuth2Error("invalid_token", "Access token has been revoked", null));
+            }
+            return org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success();
+        };
+        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer(issuer), notRevoked));
+        return decoder;
+    }
+
+    @Bean
+    public org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+        return new org.springframework.security.oauth2.jwt.NimbusJwtEncoder(jwkSource);
     }
 
     @Bean
@@ -176,5 +209,18 @@ public class AuthorizationServerConfig {
         return AuthorizationServerSettings.builder()
                 .issuer(issuer)
                 .build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+        config.setAllowedOriginPatterns(java.util.List.of("*"));
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

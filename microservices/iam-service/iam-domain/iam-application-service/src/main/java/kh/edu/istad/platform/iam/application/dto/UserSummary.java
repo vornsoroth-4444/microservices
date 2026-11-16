@@ -11,6 +11,8 @@ public class UserSummary {
     private String name;
     private String locale;
     private boolean enabled;
+    private boolean accountNonLocked;
+    private Instant lastLoginAt;
     private List<RoleSummary> roles;
     private Instant createdAt;
     private Instant updatedAt;
@@ -42,6 +44,10 @@ public class UserSummary {
     public void setLocale(String locale) { this.locale = locale; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public boolean isAccountNonLocked() { return accountNonLocked; }
+    public void setAccountNonLocked(boolean accountNonLocked) { this.accountNonLocked = accountNonLocked; }
+    public Instant getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(Instant lastLoginAt) { this.lastLoginAt = lastLoginAt; }
     public List<RoleSummary> getRoles() { return roles; }
     public void setRoles(List<RoleSummary> roles) { this.roles = roles; }
     public Instant getCreatedAt() { return createdAt; }

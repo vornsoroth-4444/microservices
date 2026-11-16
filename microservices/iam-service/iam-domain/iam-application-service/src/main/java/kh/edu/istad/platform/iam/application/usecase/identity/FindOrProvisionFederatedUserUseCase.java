@@ -104,20 +104,6 @@ public class FindOrProvisionFederatedUserUseCase {
                         .build();
 
                 user = userRepository.save(user);
-
-                // Assign default USER role
-                Optional<Role> defaultRole = roleRepository.findByName("USER");
-                if (defaultRole.isPresent()) {
-                    Role role = defaultRole.get();
-                    UserRole ur = UserRole.builder()
-                            .userId(user.getId())
-                            .roleId(role.getId())
-                            .assignedAt(now)
-                            .assignedBy("SYSTEM")
-                            .reason("Default registration role")
-                            .build();
-                    userRepository.saveUserRole(ur);
-                }
             }
 
             // Create and link the new identity
@@ -145,6 +131,31 @@ public class FindOrProvisionFederatedUserUseCase {
             userRepository.saveIdentity(newIdentity);
         }
 
+        // Ensure user is assigned the default USER role
+        ensureUserRole(user, now);
+
         return loadUserForAuthenticationUseCase.execute(user.getUsername());
+    }
+
+    private void ensureUserRole(User user, Instant now) {
+        Optional<Role> userRoleOpt = roleRepository.findByName("USER");
+        if (userRoleOpt.isEmpty()) {
+            userRoleOpt = roleRepository.findByName("ROLE_USER");
+        }
+        if (userRoleOpt.isPresent()) {
+            Role role = userRoleOpt.get();
+            var existingRoles = userRepository.findRolesByUserId(user.getId());
+            boolean hasUserRole = existingRoles != null && existingRoles.stream().anyMatch(ur -> ur.getRoleId().equals(role.getId()));
+            if (!hasUserRole) {
+                UserRole ur = UserRole.builder()
+                        .userId(user.getId())
+                        .roleId(role.getId())
+                        .assignedAt(now)
+                        .assignedBy("SYSTEM")
+                        .reason("Default registration role")
+                        .build();
+                userRepository.saveUserRole(ur);
+            }
+        }
     }
 }

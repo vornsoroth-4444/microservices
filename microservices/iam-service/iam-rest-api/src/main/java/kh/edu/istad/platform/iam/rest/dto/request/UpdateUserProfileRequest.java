@@ -1,8 +1,15 @@
 package kh.edu.istad.platform.iam.rest.dto.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public class UpdateUserProfileRequest {
+    @Size(min = 3, max = 50)
+    private String username;
+    @Email
+    @Size(max = 255)
+    private String email;
     private String givenName;
     private String familyName;
     private String middleName;
@@ -18,6 +25,11 @@ public class UpdateUserProfileRequest {
     private AddressRequest address;
 
     public UpdateUserProfileRequest() {}
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public String getGivenName() { return givenName; }
     public void setGivenName(String givenName) { this.givenName = givenName; }

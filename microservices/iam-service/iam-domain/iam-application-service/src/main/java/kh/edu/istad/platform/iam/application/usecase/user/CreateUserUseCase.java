@@ -5,6 +5,7 @@ import kh.edu.istad.platform.iam.application.dto.RoleSummary;
 import kh.edu.istad.platform.iam.application.dto.UserResult;
 import kh.edu.istad.platform.iam.application.port.out.CurrentActorProvider;
 import kh.edu.istad.platform.iam.application.port.out.PasswordHasher;
+import kh.edu.istad.platform.iam.application.port.out.PasswordPolicy;
 import kh.edu.istad.platform.iam.application.port.out.RoleRepository;
 import kh.edu.istad.platform.iam.application.port.out.UserRepository;
 import kh.edu.istad.platform.iam.domain.exception.ConflictException;
@@ -29,19 +30,23 @@ public class CreateUserUseCase {
     private final RoleRepository roleRepository;
     private final PasswordHasher passwordHasher;
     private final CurrentActorProvider currentActorProvider;
+    private final PasswordPolicy passwordPolicy;
 
     public CreateUserUseCase(UserRepository userRepository,
                              RoleRepository roleRepository,
                              PasswordHasher passwordHasher,
-                             CurrentActorProvider currentActorProvider) {
+                             CurrentActorProvider currentActorProvider,
+                             PasswordPolicy passwordPolicy) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHasher = passwordHasher;
         this.currentActorProvider = currentActorProvider;
+        this.passwordPolicy = passwordPolicy;
     }
 
     @Transactional
     public UserResult execute(CreateUserCommand cmd) {
+        passwordPolicy.validate(cmd.getPassword());
         String normalizedEmail = cmd.getEmail().trim().toLowerCase(Locale.ROOT);
         String username = cmd.getUsername().trim();
 

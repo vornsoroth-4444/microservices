@@ -21,11 +21,8 @@ public class RegisterController {
     }
 
     @GetMapping("/register")
-    public String registerPage(Model model) {
-        if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new RegisterForm());
-        }
-        return "register";
+    public String registerPage() {
+        return "forward:/index.html";
     }
 
     @PostMapping("/register")
@@ -37,7 +34,7 @@ public class RegisterController {
         }
 
         if (bindingResult.hasErrors()) {
-            return "register";
+            return "forward:/index.html";
         }
 
         try {
@@ -55,7 +52,7 @@ public class RegisterController {
             return "redirect:/login?registered=true";
         } catch (Exception ex) {
             model.addAttribute("errorMessage", ex.getMessage());
-            return "register";
+            return "forward:/index.html";
         }
     }
 }

@@ -52,6 +52,6 @@ public class ConsentController {
 
         model.addAttribute("consent", consentModel);
         model.addAttribute("principalName", principal != null ? principal.getName() : "");
-        return "consent";
+        return "forward:/index.html";
     }
 }

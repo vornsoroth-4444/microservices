@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kh.edu.istad.platform.iam.application.dto.AuthUserResult;
 import kh.edu.istad.platform.iam.application.dto.FederatedIdentityCommand;
 import kh.edu.istad.platform.iam.application.usecase.identity.FindOrProvisionFederatedUserUseCase;
+import kh.edu.istad.platform.iam.application.usecase.identity.LinkIdentityUseCase;
 import kh.edu.istad.platform.iam.domain.model.IdentityProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,6 +14,9 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.*;
 
@@ -20,14 +24,19 @@ import java.util.*;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final FindOrProvisionFederatedUserUseCase findOrProvisionFederatedUserUseCase;
+    private final LinkIdentityUseCase linkIdentityUseCase;
+    private final JdbcOperations jdbc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public CustomOAuth2UserService(FindOrProvisionFederatedUserUseCase findOrProvisionFederatedUserUseCase) {
+    public CustomOAuth2UserService(FindOrProvisionFederatedUserUseCase findOrProvisionFederatedUserUseCase, LinkIdentityUseCase linkIdentityUseCase, JdbcOperations jdbc) {
         this.findOrProvisionFederatedUserUseCase = findOrProvisionFederatedUserUseCase;
+        this.linkIdentityUseCase = linkIdentityUseCase;
+        this.jdbc = jdbc;
     }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        if (!socialEnabled()) throw new OAuth2AuthenticationException(new org.springframework.security.oauth2.core.OAuth2Error("access_denied"), "Social sign-in is disabled by IAM policy");
         OAuth2User oauth2User = super.loadUser(userRequest);
         String registrationId = userRequest.getClientRegistration().getRegistrationId().toLowerCase();
 
@@ -86,6 +95,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .attributes(attributesJson)
                 .build();
 
+        String linkTarget = takeLinkTarget();
+        if (linkTarget != null) {
+            linkIdentityUseCase.execute(UUID.fromString(linkTarget), cmd);
+        }
+
         AuthUserResult authResult = findOrProvisionFederatedUserUseCase.execute(cmd);
 
         Set<GrantedAuthority> authorities = new LinkedHashSet<>();
@@ -112,5 +126,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         return new DefaultOAuth2User(authorities, enhancedAttributes, nameAttributeKey);
+    }
+
+    private String takeLinkTarget() {
+        if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes)) return null;
+        var session = attributes.getRequest().getSession(false);
+        if (session == null) return null;
+        Object value = session.getAttribute("iam-link-user-uuid");
+        session.removeAttribute("iam-link-user-uuid");
+        return value == null ? null : value.toString();
+    }
+
+    private boolean socialEnabled() {
+        return jdbc.query("SELECT config_value FROM iam_system_config WHERE config_key='social.enabled'", rs -> !rs.next() || Boolean.parseBoolean(rs.getString(1)));
     }
 }

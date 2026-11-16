@@ -28,15 +28,8 @@ public class PasswordController {
     }
 
     @GetMapping("/profile/password")
-    public String changePasswordPage(Authentication auth, Model model) {
-        Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
-        if (userOpt.isEmpty()) {
-            return "redirect:/login";
-        }
-        if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new ChangePasswordForm());
-        }
-        return "change-password";
+    public String changePasswordPage() {
+        return "forward:/index.html";
     }
 
     @PostMapping("/profile/password")
@@ -54,7 +47,7 @@ public class PasswordController {
         }
 
         if (bindingResult.hasErrors()) {
-            return "change-password";
+            return "forward:/index.html";
         }
 
         try {
@@ -69,7 +62,7 @@ public class PasswordController {
             return "redirect:/?passwordChanged=true";
         } catch (Exception ex) {
             model.addAttribute("errorMessage", ex.getMessage());
-            return "change-password";
+            return "forward:/index.html";
         }
     }
 }

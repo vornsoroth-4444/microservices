@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 public class ProfileController {
@@ -26,72 +28,23 @@ public class ProfileController {
     private final GetUserUseCase getUserUseCase;
     private final GetUserAuthoritiesUseCase getUserAuthoritiesUseCase;
     private final UpdateUserProfileUseCase updateUserProfileUseCase;
+    private final WebTokenService webTokenService;
 
     public ProfileController(WebUserResolver webUserResolver,
                              GetUserUseCase getUserUseCase,
                              GetUserAuthoritiesUseCase getUserAuthoritiesUseCase,
-                             UpdateUserProfileUseCase updateUserProfileUseCase) {
+                             UpdateUserProfileUseCase updateUserProfileUseCase,
+                             @Autowired(required = false) WebTokenService webTokenService) {
         this.webUserResolver = webUserResolver;
         this.getUserUseCase = getUserUseCase;
         this.getUserAuthoritiesUseCase = getUserAuthoritiesUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
+        this.webTokenService = webTokenService;
     }
 
-    @GetMapping({"/", "/profile"})
-    public String home(Authentication auth,
-                       @RequestParam(name = "updated", required = false) String updated,
-                       @RequestParam(name = "passwordChanged", required = false) String passwordChanged,
-                       Model model) {
-        Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
-        if (userOpt.isEmpty()) {
-            return "redirect:/login";
-        }
-
-        User user = userOpt.get();
-        UserResult userResult = getUserUseCase.execute(user.getUuid());
-        UserAuthoritiesResult authoritiesResult = getUserAuthoritiesUseCase.execute(user.getUuid());
-
-        model.addAttribute("user", userResult);
-        model.addAttribute("authorities", authoritiesResult);
-        model.addAttribute("updated", updated != null);
-        model.addAttribute("passwordChanged", passwordChanged != null);
-        return "index";
-    }
-
-    @GetMapping("/profile/edit")
-    public String editProfilePage(Authentication auth, Model model) {
-        Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
-        if (userOpt.isEmpty()) {
-            return "redirect:/login";
-        }
-
-        User user = userOpt.get();
-        UserResult userResult = getUserUseCase.execute(user.getUuid());
-
-        ProfileEditForm form = new ProfileEditForm();
-        form.setGivenName(userResult.getGivenName());
-        form.setFamilyName(userResult.getFamilyName());
-        form.setMiddleName(userResult.getMiddleName());
-        form.setNickname(userResult.getNickname());
-        form.setGender(userResult.getGender());
-        form.setBirthdate(userResult.getBirthdate());
-        form.setProfileUrl(userResult.getProfileUrl());
-        form.setPictureUrl(userResult.getPictureUrl());
-        form.setWebsiteUrl(userResult.getWebsiteUrl());
-        form.setZoneinfo(userResult.getZoneinfo());
-        form.setLocale(userResult.getLocale());
-        form.setPhoneNumber(userResult.getPhoneNumber());
-
-        if (userResult.getAddress() != null) {
-            form.setStreetAddress(userResult.getAddress().getStreetAddress());
-            form.setLocality(userResult.getAddress().getLocality());
-            form.setRegion(userResult.getAddress().getRegion());
-            form.setPostalCode(userResult.getAddress().getPostalCode());
-            form.setCountry(userResult.getAddress().getCountry());
-        }
-
-        model.addAttribute("form", form);
-        return "profile-edit";
+    @GetMapping({"/", "/profile", "/profile/**"})
+    public String home() {
+        return "forward:/index.html";
     }
 
     @PostMapping("/profile/edit")

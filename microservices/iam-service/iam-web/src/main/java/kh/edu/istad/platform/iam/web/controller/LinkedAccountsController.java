@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Controller
@@ -31,18 +33,21 @@ public class LinkedAccountsController {
     }
 
     @GetMapping
-    public String linkedAccounts(Authentication auth, Model model) {
+    public String linkedAccounts() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/{provider}/link")
+    public String beginLink(Authentication auth,
+                            jakarta.servlet.http.HttpServletRequest request,
+                            @PathVariable String provider) {
         Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
-        if (userOpt.isEmpty()) {
+        String normalized = provider.toLowerCase(Locale.ROOT);
+        if (userOpt.isEmpty() || !Set.of("google", "github", "facebook").contains(normalized)) {
             return "redirect:/login";
         }
-
-        User user = userOpt.get();
-        List<IdentityResult> identities = listUserIdentitiesUseCase.execute(user.getUuid());
-
-        model.addAttribute("identities", identities);
-        model.addAttribute("hasPassword", user.hasPassword());
-        return "linked-accounts";
+        request.getSession(true).setAttribute("iam-link-user-uuid", userOpt.get().getUuid().toString());
+        return "redirect:/oauth2/authorization/" + normalized;
     }
 
     @PostMapping("/{identityUuid}/unlink")

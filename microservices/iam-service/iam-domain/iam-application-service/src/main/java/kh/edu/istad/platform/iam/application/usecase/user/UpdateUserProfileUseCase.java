@@ -7,6 +7,7 @@ import kh.edu.istad.platform.iam.application.port.out.CurrentActorProvider;
 import kh.edu.istad.platform.iam.application.port.out.RoleRepository;
 import kh.edu.istad.platform.iam.application.port.out.UserRepository;
 import kh.edu.istad.platform.iam.domain.exception.ResourceNotFoundException;
+import kh.edu.istad.platform.iam.domain.exception.ConflictException;
 import kh.edu.istad.platform.iam.domain.model.User;
 import kh.edu.istad.platform.iam.domain.model.UserRole;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,17 @@ public class UpdateUserProfileUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with uuid: " + cmd.getUserUuid()));
 
         String actor = currentActorProvider.getCurrentActor();
+        if (cmd.getUsername() != null && !cmd.getUsername().isBlank() && !cmd.getUsername().equals(user.getUsername())) {
+            userRepository.findByUsernameOrEmail(cmd.getUsername().trim()).filter(other -> !other.getUuid().equals(user.getUuid()))
+                    .ifPresent(other -> { throw new ConflictException("Username is already in use"); });
+            user.setUsername(cmd.getUsername().trim());
+        }
+        if (cmd.getEmail() != null && !cmd.getEmail().isBlank() && !cmd.getEmail().equalsIgnoreCase(user.getEmail())) {
+            userRepository.findByUsernameOrEmail(cmd.getEmail().trim()).filter(other -> !other.getUuid().equals(user.getUuid()))
+                    .ifPresent(other -> { throw new ConflictException("Email is already in use"); });
+            user.setEmail(cmd.getEmail().trim());
+            user.setEmailVerified(false);
+        }
         user.updateProfile(
                 cmd.getGivenName(),
                 cmd.getFamilyName(),

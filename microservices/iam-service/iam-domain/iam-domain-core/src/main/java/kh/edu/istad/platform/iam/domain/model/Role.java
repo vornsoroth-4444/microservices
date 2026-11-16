@@ -48,10 +48,11 @@ public class Role {
         return new Builder();
     }
 
-    public void update(String description, String actor) {
+    public void update(String name, String description, String actor) {
         if (this.system) {
             throw new SystemResourceProtectedException("System role cannot be updated: " + this.name);
         }
+        if (name != null && !name.isBlank()) this.name = name.trim();
         this.description = description;
         this.updatedAt = Instant.now();
         this.updatedBy = actor != null ? actor : "SYSTEM";

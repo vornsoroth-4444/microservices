@@ -39,12 +39,13 @@ public final class UserDtoMapper {
                 .roles(roles)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .lastLoginAt(user.getLastLoginAt())
                 .build();
     }
 
     public static UserSummary toSummary(User user, List<RoleSummary> roles) {
         if (user == null) return null;
-        return new UserSummary(
+        UserSummary summary = new UserSummary(
                 user.getUuid(),
                 user.getUsername(),
                 user.getEmail(),
@@ -55,5 +56,8 @@ public final class UserDtoMapper {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+        summary.setAccountNonLocked(user.isAccountNonLocked());
+        summary.setLastLoginAt(user.getLastLoginAt());
+        return summary;
     }
 }

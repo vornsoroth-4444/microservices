@@ -12,9 +12,13 @@ import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 class RestApiIntegrationTest extends AbstractIntegrationTest {
 
@@ -84,5 +88,71 @@ class RestApiIntegrationTest extends AbstractIntegrationTest {
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
+    @DisplayName("OAuth client administration supports create, update, list, and delete")
+    void testOAuthClientAdministration() throws Exception {
+        String token = adminApiToken();
+        MvcResult created = mockMvc.perform(post("/api/clients")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"clientName":"Integration test app","redirectUris":["https://client.example/callback"],"grantTypes":["authorization_code","refresh_token"],"scopes":["openid","profile"]}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.clientSecret").isNotEmpty())
+                .andExpect(jsonPath("$.grantTypes").isArray())
+                .andReturn();
+        String clientId = JsonPath.read(created.getResponse().getContentAsString(), "$.clientId");
+
+        mockMvc.perform(get("/api/clients/{clientId}", clientId).header("Authorization", "Bearer " + token)).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clientSecret").doesNotExist());
+
+        mockMvc.perform(put("/api/clients/{clientId}", clientId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"clientName":"Updated test app","redirectUris":["https://client.example/return"],"grantTypes":["authorization_code"],"scopes":["openid"]}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clientName").value("Updated test app"));
+
+        mockMvc.perform(delete("/api/clients/{clientId}", clientId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("System password policy is readable and updateable by administrators")
+    void testSystemPasswordPolicy() throws Exception {
+        String token = adminApiToken();
+        mockMvc.perform(get("/api/system-config").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.['password.minLength']").value("12"));
+
+        mockMvc.perform(patch("/api/system-config")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password.minLength\":\"13\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.['password.minLength']").value("13"));
+
+        mockMvc.perform(patch("/api/system-config")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password.minLength\":\"12\"}"))
+                .andExpect(status().isOk());
+    }
+
+    private String adminApiToken() throws Exception {
+        MvcResult tokenResult = mockMvc.perform(post("/oauth2/token")
+                        .with(httpBasic("iam-client", "iam-secret"))
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("grant_type", "client_credentials")
+                        .param("scope", "user:update"))
+                .andExpect(status().isOk())
+                .andReturn();
+        return JsonPath.read(tokenResult.getResponse().getContentAsString(), "$.access_token");
     }
 }

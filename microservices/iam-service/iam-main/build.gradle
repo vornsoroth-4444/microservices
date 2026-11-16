@@ -2,14 +2,6 @@ plugins {
     id 'spring-boot-common-conventions'
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDirs += ['src/main/jte']
-        }
-    }
-}
-
 dependencies {
     implementation project(':iam-domain:iam-domain-core')
     implementation project(':iam-domain:iam-application-service')
@@ -17,9 +9,6 @@ dependencies {
     implementation project(':iam-infrastructure')
     implementation project(':iam-rest-api')
     implementation project(':iam-web')
-
-    implementation 'gg.jte:jte:3.2.4'
-    implementation 'gg.jte:jte-spring-boot-starter-3:3.2.4'
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

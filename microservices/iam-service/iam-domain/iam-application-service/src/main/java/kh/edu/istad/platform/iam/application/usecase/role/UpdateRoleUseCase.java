@@ -40,7 +40,10 @@ public class UpdateRoleUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with uuid: " + cmd.getRoleUuid()));
 
         String actor = currentActorProvider.getCurrentActor();
-        role.update(cmd.getDescription(), actor);
+        if (cmd.getName() != null && !cmd.getName().isBlank() && !cmd.getName().equalsIgnoreCase(role.getName()) && roleRepository.existsByName(cmd.getName().trim())) {
+            throw new kh.edu.istad.platform.iam.domain.exception.ConflictException("Role name is already in use: " + cmd.getName());
+        }
+        role.update(cmd.getName(), cmd.getDescription(), actor);
         Role savedRole = roleRepository.save(role);
 
         Instant now = Instant.now();

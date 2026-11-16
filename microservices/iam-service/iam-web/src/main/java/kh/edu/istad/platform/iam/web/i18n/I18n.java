@@ -23,4 +23,8 @@ public class I18n {
     public String getLang() {
         return LocaleContextHolder.getLocale().getLanguage();
     }
+
+    public Locale getLocale() {
+        return LocaleContextHolder.getLocale();
+    }
 }

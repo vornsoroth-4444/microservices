@@ -64,6 +64,7 @@ public class InitCore implements ApplicationRunner {
 
         // 4. Seed OAuth2 Clients
         seedDefaultClient();
+        seedIamWebClient();
 
         log.info("Database initialization and seeding completed successfully.");
     }
@@ -263,5 +264,42 @@ public class InitCore implements ApplicationRunner {
             registeredClientRepository.save(defaultClient);
             log.info("Seeded default OAuth2 client: iam-client");
         }
+    }
+
+    private void seedIamWebClient() {
+        if (registeredClientRepository.findByClientId("iam-web-spa") != null) return;
+        RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("iam-web-spa")
+                .clientName("IAM React Console")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("http://localhost:9000/iam-ui/")
+                .redirectUri("http://localhost:5173/iam-ui/")
+                .postLogoutRedirectUri("http://localhost:9000/iam-ui/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .scope(OidcScopes.PHONE)
+                .scope(OidcScopes.ADDRESS)
+                .scope("user:read")
+                .scope("user:create")
+                .scope("user:update")
+                .scope("user:delete")
+                .scope("user:assign")
+                .scope("role:read")
+                .scope("role:create")
+                .scope("role:update")
+                .scope("role:delete")
+                .scope("role:assign")
+                .scope("permission:read")
+                .scope("permission:create")
+                .scope("permission:update")
+                .scope("permission:delete")
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
+                .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).refreshTokenTimeToLive(Duration.ofDays(30)).reuseRefreshTokens(false).build())
+                .build();
+        registeredClientRepository.save(client);
+        log.info("Seeded PKCE public client: iam-web-spa");
     }
 }

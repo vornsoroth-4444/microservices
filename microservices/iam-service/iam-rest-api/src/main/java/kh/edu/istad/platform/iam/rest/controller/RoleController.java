@@ -99,7 +99,7 @@ public class RoleController {
     @PatchMapping("/{uuid}")
     public ResponseEntity<RoleResult> updateRole(@PathVariable UUID uuid,
                                                  @Valid @RequestBody UpdateRoleRequest request) {
-        UpdateRoleCommand cmd = new UpdateRoleCommand(uuid, request.getDescription());
+        UpdateRoleCommand cmd = new UpdateRoleCommand(uuid, request.getName(), request.getDescription());
         RoleResult result = updateRoleUseCase.execute(cmd);
         return ResponseEntity.ok(result);
     }

@@ -153,6 +153,8 @@ public class UserController {
 
         UpdateUserProfileCommand cmd = UpdateUserProfileCommand.builder()
                 .userUuid(uuid)
+                .username(request.getUsername())
+                .email(request.getEmail())
                 .givenName(request.getGivenName())
                 .familyName(request.getFamilyName())
                 .middleName(request.getMiddleName())

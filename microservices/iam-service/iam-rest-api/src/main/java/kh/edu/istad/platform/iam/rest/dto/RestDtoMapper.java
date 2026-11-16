@@ -16,7 +16,7 @@ public final class RestDtoMapper {
                 ? result.getRoles().stream().map(r -> new RoleItemResponse(r.getUuid(), r.getName())).toList()
                 : Collections.emptyList();
 
-        return new UserResponse(
+        UserResponse response = new UserResponse(
                 result.getUuid(),
                 result.getUsername(),
                 result.getEmail(),
@@ -28,6 +28,14 @@ public final class RestDtoMapper {
                 result.getCreatedAt(),
                 result.getUpdatedAt()
         );
+        response.setGivenName(result.getGivenName());
+        response.setFamilyName(result.getFamilyName());
+        response.setAccountNonLocked(result.isAccountNonLocked());
+        response.setPhoneNumber(result.getPhoneNumber());
+        response.setPictureUrl(result.getPictureUrl());
+        response.setProfileUrl(result.getProfileUrl());
+        response.setLastLoginAt(result.getLastLoginAt());
+        return response;
     }
 
     public static UserResponse fromSummary(UserSummary summary) {
@@ -36,7 +44,7 @@ public final class RestDtoMapper {
                 ? summary.getRoles().stream().map(r -> new RoleItemResponse(r.getUuid(), r.getName())).toList()
                 : Collections.emptyList();
 
-        return new UserResponse(
+        UserResponse response = new UserResponse(
                 summary.getUuid(),
                 summary.getUsername(),
                 summary.getEmail(),
@@ -48,6 +56,10 @@ public final class RestDtoMapper {
                 summary.getCreatedAt(),
                 summary.getUpdatedAt()
         );
+        response.setAccountNonLocked(summary.isAccountNonLocked());
+        response.setGivenName(summary.getName());
+        response.setLastLoginAt(summary.getLastLoginAt());
+        return response;
     }
 
     public static UserAuthoritiesResponse toUserAuthoritiesResponse(UserAuthoritiesResult result) {
