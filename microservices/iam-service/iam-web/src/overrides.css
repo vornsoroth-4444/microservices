@@ -229,6 +229,11 @@
   color: #ffffff;
 }
 
+.provider-icon.telegram {
+  background: #0088cc;
+  color: #ffffff;
+}
+
 .provider-row span {
   flex: 1;
   display: flex;

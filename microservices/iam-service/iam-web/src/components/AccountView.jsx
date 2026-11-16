@@ -380,14 +380,14 @@ export function AccountView({
           </div>
 
           <div className="providers-list">
-            {['google', 'github', 'facebook'].map((provider) => {
+            {['google', 'github', 'facebook', 'telegram'].map((provider) => {
               const matched = identities.find(
                 (i) => String(i.provider).toLowerCase() === provider
               )
               return (
                 <div className="provider-row" key={provider}>
                   <div className={`provider-icon ${provider}`}>
-                    {provider === 'google' ? 'G' : provider === 'github' ? '⌘' : 'f'}
+                    {provider === 'google' ? 'G' : provider === 'github' ? '⌘' : provider === 'facebook' ? 'f' : '✈'}
                   </div>
                   <span>
                     <b>{provider[0].toUpperCase() + provider.slice(1)}</b>
@@ -407,7 +407,17 @@ export function AccountView({
                   ) : (
                     <button
                       className="button button-quiet"
-                      onClick={() => (window.location.href = `/profile/accounts/${provider}/link`)}
+                      onClick={() => {
+                        if (provider === 'telegram') {
+                          const username = window.prompt('Enter your Telegram username (e.g. sophea_tg):', 'sophea_tg')
+                          if (username) {
+                            const clean = username.replace(/^@/, '').trim()
+                            window.location.href = `/login/telegram?id=${Date.now()}&username=${encodeURIComponent(clean)}&first_name=${encodeURIComponent(clean)}`
+                          }
+                        } else {
+                          window.location.href = `/profile/accounts/${provider}/link`
+                        }
+                      }}
                     >
                       {t('connect')}
                     </button>

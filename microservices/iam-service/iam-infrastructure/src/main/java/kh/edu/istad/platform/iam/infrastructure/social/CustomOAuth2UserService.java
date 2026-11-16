@@ -68,8 +68,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             email = (String) attributes.get("email");
             emailVerified = email != null;
             displayName = (String) attributes.get("name");
-            username = (String) attributes.get("name");
-            pictureUrl = null;
+            String rawName = (String) attributes.get("name");
+            if (rawName != null && !rawName.isBlank()) {
+                username = rawName.replaceAll("\\s+", "").toLowerCase();
+            } else {
+                username = "fb_" + providerSubject;
+            }
+            if (attributes.get("picture") instanceof Map<?, ?> picMap) {
+                Object dataObj = picMap.get("data");
+                if (dataObj instanceof Map<?, ?> dataMap && dataMap.get("url") != null) {
+                    pictureUrl = String.valueOf(dataMap.get("url"));
+                }
+            }
         } else {
             // Default Google or generic
             provider = IdentityProvider.GOOGLE;

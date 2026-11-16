@@ -43,10 +43,13 @@ public class LinkedAccountsController {
                             @PathVariable String provider) {
         Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
         String normalized = provider.toLowerCase(Locale.ROOT);
-        if (userOpt.isEmpty() || !Set.of("google", "github", "facebook").contains(normalized)) {
+        if (userOpt.isEmpty() || !Set.of("google", "github", "facebook", "telegram").contains(normalized)) {
             return "redirect:/login";
         }
         request.getSession(true).setAttribute("iam-link-user-uuid", userOpt.get().getUuid().toString());
+        if ("telegram".equals(normalized)) {
+            return "redirect:/#telegram-link";
+        }
         return "redirect:/oauth2/authorization/" + normalized;
     }
 
