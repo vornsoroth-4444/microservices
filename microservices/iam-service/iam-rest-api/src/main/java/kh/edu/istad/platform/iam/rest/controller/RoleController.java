@@ -91,13 +91,13 @@ public class RoleController {
     }
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<RoleResult> getRole(@PathVariable UUID uuid) {
+    public ResponseEntity<RoleResult> getRole(@PathVariable("uuid") UUID uuid) {
         RoleResult result = getRoleUseCase.execute(uuid);
         return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/{uuid}")
-    public ResponseEntity<RoleResult> updateRole(@PathVariable UUID uuid,
+    public ResponseEntity<RoleResult> updateRole(@PathVariable("uuid") UUID uuid,
                                                  @Valid @RequestBody UpdateRoleRequest request) {
         UpdateRoleCommand cmd = new UpdateRoleCommand(uuid, request.getName(), request.getDescription());
         RoleResult result = updateRoleUseCase.execute(cmd);
@@ -105,26 +105,26 @@ public class RoleController {
     }
 
     @DeleteMapping("/{uuid}")
-    public ResponseEntity<Void> deleteRole(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> deleteRole(@PathVariable("uuid") UUID uuid) {
         deleteRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/activate")
-    public ResponseEntity<Void> activateRole(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> activateRole(@PathVariable("uuid") UUID uuid) {
         activateRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/deactivate")
-    public ResponseEntity<Void> deactivateRole(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> deactivateRole(@PathVariable("uuid") UUID uuid) {
         deactivateRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/permissions")
     public ResponseEntity<List<PermissionAssignmentResult>> assignPermissions(
-            @PathVariable UUID uuid,
+            @PathVariable("uuid") UUID uuid,
             @Valid @RequestBody AssignPermissionsToRoleRequest request) {
         AssignPermissionsToRoleCommand cmd = new AssignPermissionsToRoleCommand(
                 uuid,

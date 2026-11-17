@@ -42,7 +42,7 @@ public class ClientAdminController {
     }
 
     @GetMapping("/{clientId}")
-    public Map<String, Object> get(@PathVariable String clientId) {
+    public Map<String, Object> get(@PathVariable("clientId") String clientId) {
         return toMap(require(clientId));
     }
 
@@ -74,7 +74,7 @@ public class ClientAdminController {
     }
 
     @PutMapping("/{clientId}")
-    public Map<String, Object> update(@PathVariable String clientId, @RequestBody ClientRequest request) {
+    public Map<String, Object> update(@PathVariable("clientId") String clientId, @RequestBody ClientRequest request) {
         validate(request);
         RegisteredClient current = require(clientId);
         RegisteredClient.Builder builder = RegisteredClient.from(current).clientName(request.clientName().trim());
@@ -87,7 +87,7 @@ public class ClientAdminController {
     }
 
     @PostMapping("/{clientId}/rotate-secret")
-    public Map<String, Object> rotateSecret(@PathVariable String clientId) {
+    public Map<String, Object> rotateSecret(@PathVariable("clientId") String clientId) {
         RegisteredClient current = require(clientId);
         String raw = secret();
         RegisteredClient saved = RegisteredClient.from(current).clientSecret(passwordEncoder.encode(raw)).build();
@@ -99,7 +99,7 @@ public class ClientAdminController {
 
     @DeleteMapping("/{clientId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String clientId) {
+    public void delete(@PathVariable("clientId") String clientId) {
         RegisteredClient current = require(clientId);
         jdbc.update("DELETE FROM oauth2_authorization_consent WHERE registered_client_id = ?", current.getId());
         jdbc.update("DELETE FROM oauth2_authorization WHERE registered_client_id = ?", current.getId());

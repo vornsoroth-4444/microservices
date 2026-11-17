@@ -84,13 +84,13 @@ public class PermissionController {
     }
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<PermissionResponse> getPermission(@PathVariable UUID uuid) {
+    public ResponseEntity<PermissionResponse> getPermission(@PathVariable("uuid") UUID uuid) {
         PermissionResult result = getPermissionUseCase.execute(uuid);
         return ResponseEntity.ok(RestDtoMapper.toPermissionResponse(result));
     }
 
     @PatchMapping("/{uuid}")
-    public ResponseEntity<PermissionResponse> updatePermission(@PathVariable UUID uuid,
+    public ResponseEntity<PermissionResponse> updatePermission(@PathVariable("uuid") UUID uuid,
                                                                @Valid @RequestBody UpdatePermissionRequest request) {
         UpdatePermissionCommand cmd = new UpdatePermissionCommand(
                 uuid,
@@ -103,19 +103,19 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{uuid}")
-    public ResponseEntity<Void> deletePermission(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> deletePermission(@PathVariable("uuid") UUID uuid) {
         deletePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/activate")
-    public ResponseEntity<Void> activatePermission(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> activatePermission(@PathVariable("uuid") UUID uuid) {
         activatePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/deactivate")
-    public ResponseEntity<Void> deactivatePermission(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> deactivatePermission(@PathVariable("uuid") UUID uuid) {
         deactivatePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }

@@ -88,8 +88,7 @@ public class MeController {
         return ResponseEntity.ok(RestDtoMapper.toUserResponse(result));
     }
 
-    @PutMapping("/password")
-    @PostMapping("/password")
+    @RequestMapping(value = "/password", method = {RequestMethod.PUT, RequestMethod.POST})
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal Jwt jwt,
                                                @Valid @RequestBody ChangePasswordRequest request) {
         UUID userUuid = UUID.fromString(jwt.getSubject());
@@ -112,7 +111,7 @@ public class MeController {
 
     @DeleteMapping("/identities/{identityUuid}")
     public ResponseEntity<Void> unlinkIdentity(@AuthenticationPrincipal Jwt jwt,
-                                               @PathVariable UUID identityUuid) {
+                                               @PathVariable("identityUuid") UUID identityUuid) {
         UUID userUuid = UUID.fromString(jwt.getSubject());
         unlinkIdentityUseCase.execute(userUuid, identityUuid);
         return ResponseEntity.noContent().build();

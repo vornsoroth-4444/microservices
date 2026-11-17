@@ -1,1 +1,6 @@
 // Root iam-service project build file
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ['-parameters']
+    }
+}

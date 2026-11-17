@@ -40,7 +40,7 @@ public class ConnectedAppsController {
 
     @PostMapping("/{clientId}/revoke")
     public String revokeApp(Authentication auth,
-                            @PathVariable String clientId,
+                            @PathVariable("clientId") String clientId,
                             RedirectAttributes redirectAttributes) {
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";

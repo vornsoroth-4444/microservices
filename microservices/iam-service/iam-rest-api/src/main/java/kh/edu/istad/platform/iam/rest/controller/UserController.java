@@ -135,13 +135,13 @@ public class UserController {
     }
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable UUID uuid) {
+    public ResponseEntity<UserResponse> getUser(@PathVariable("uuid") UUID uuid) {
         UserResult result = getUserUseCase.execute(uuid);
         return ResponseEntity.ok(RestDtoMapper.toUserResponse(result));
     }
 
     @PatchMapping("/{uuid}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID uuid,
+    public ResponseEntity<UserResponse> updateUser(@PathVariable("uuid") UUID uuid,
                                                    @Valid @RequestBody UpdateUserProfileRequest request) {
         Address address = request.getAddress() != null ? Address.builder()
                 .streetAddress(request.getAddress().getStreetAddress())
@@ -175,38 +175,37 @@ public class UserController {
     }
 
     @DeleteMapping("/{uuid}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("uuid") UUID uuid) {
         deleteUserUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/enable")
-    public ResponseEntity<Void> enableUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> enableUser(@PathVariable("uuid") UUID uuid) {
         enableUserUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/disable")
-    public ResponseEntity<Void> disableUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> disableUser(@PathVariable("uuid") UUID uuid) {
         disableUserUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/lock")
-    public ResponseEntity<Void> lockUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> lockUser(@PathVariable("uuid") UUID uuid) {
         lockUserUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/unlock")
-    public ResponseEntity<Void> unlockUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> unlockUser(@PathVariable("uuid") UUID uuid) {
         unlockUserUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping(path = {"/{uuid}/password", "/{uuid}/reset-password"})
-    @PostMapping("/{uuid}/reset-password")
-    public ResponseEntity<Void> resetPassword(@PathVariable UUID uuid,
+    @RequestMapping(value = {"/{uuid}/password", "/{uuid}/reset-password"}, method = {RequestMethod.PUT, RequestMethod.POST})
+    public ResponseEntity<Void> resetPassword(@PathVariable("uuid") UUID uuid,
                                               @Valid @RequestBody ResetUserPasswordRequest request) {
         ResetUserPasswordCommand cmd = new ResetUserPasswordCommand(uuid, request.getNewPassword());
         resetUserPasswordUseCase.execute(cmd);
@@ -214,13 +213,13 @@ public class UserController {
     }
 
     @GetMapping("/{uuid}/authorities")
-    public ResponseEntity<UserAuthoritiesResponse> getAuthorities(@PathVariable UUID uuid) {
+    public ResponseEntity<UserAuthoritiesResponse> getAuthorities(@PathVariable("uuid") UUID uuid) {
         UserAuthoritiesResult result = getUserAuthoritiesUseCase.execute(uuid);
         return ResponseEntity.ok(RestDtoMapper.toUserAuthoritiesResponse(result));
     }
 
     @PostMapping("/{uuid}/roles")
-    public ResponseEntity<List<RoleAssignmentResult>> assignRoles(@PathVariable UUID uuid,
+    public ResponseEntity<List<RoleAssignmentResult>> assignRoles(@PathVariable("uuid") UUID uuid,
                                                                  @Valid @RequestBody AssignRolesToUserRequest request) {
         AssignRolesToUserCommand cmd = new AssignRolesToUserCommand(
                 uuid,
@@ -241,7 +240,7 @@ public class UserController {
     }
 
     @PostMapping("/{uuid}/permissions")
-    public ResponseEntity<List<PermissionGrantResult>> grantPermissions(@PathVariable UUID uuid,
+    public ResponseEntity<List<PermissionGrantResult>> grantPermissions(@PathVariable("uuid") UUID uuid,
                                                                        @Valid @RequestBody GrantPermissionsToUserRequest request) {
         GrantPermissionsToUserCommand cmd = new GrantPermissionsToUserCommand(
                 uuid,
@@ -263,14 +262,14 @@ public class UserController {
     }
 
     @GetMapping("/{uuid}/identities")
-    public ResponseEntity<List<IdentityResponse>> getIdentities(@PathVariable UUID uuid) {
+    public ResponseEntity<List<IdentityResponse>> getIdentities(@PathVariable("uuid") UUID uuid) {
         List<IdentityResult> results = listUserIdentitiesUseCase.execute(uuid);
         return ResponseEntity.ok(results.stream().map(RestDtoMapper::toIdentityResponse).toList());
     }
 
     @DeleteMapping("/{uuid}/identities/{identityUuid}")
-    public ResponseEntity<Void> unlinkIdentity(@PathVariable UUID uuid,
-                                               @PathVariable UUID identityUuid) {
+    public ResponseEntity<Void> unlinkIdentity(@PathVariable("uuid") UUID uuid,
+                                               @PathVariable("identityUuid") UUID identityUuid) {
         unlinkIdentityUseCase.execute(uuid, identityUuid);
         return ResponseEntity.noContent().build();
     }

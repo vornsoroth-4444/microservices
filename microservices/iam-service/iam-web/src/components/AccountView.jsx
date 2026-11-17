@@ -8,20 +8,19 @@ import {
   Activity,
   AlertTriangle,
   LogOut,
-  RefreshCw
+  Save,
+  Trash2,
 } from 'lucide-react'
-import { api, pageItems, label, setToken, clearToken } from '../api'
+import { api, pageItems, label } from '../api'
 
 export function AccountView({
   profile,
   setProfile,
-  token,
-  onTokenChange,
   act,
   flash,
   t,
   selectedTab,
-  onTabChange
+  onTabChange,
 }) {
   const [activeTab, setActiveTab] = useState(selectedTab || 'profile')
 
@@ -35,40 +34,31 @@ export function AccountView({
     setActiveTab(tab)
     if (onTabChange) onTabChange(tab)
   }
+
   const [identities, setIdentities] = useState([])
   const [sessions, setSessions] = useState([])
   const [loginHistory, setLoginHistory] = useState([])
   const [activityLogs, setActivityLogs] = useState([])
-  const [loading, setLoading] = useState(false)
 
   // Password form state
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
 
-  // Manual token input state
-  const [manualToken, setManualToken] = useState(token || '')
-
-  useEffect(() => {
-    setManualToken(token || '')
-  }, [token])
-
   const loadAll = async () => {
-    setLoading(true)
     const [identitiesRes, sessionsRes, loginsRes, activityRes] = await Promise.allSettled([
       api('/api/me/identities'),
       api('/api/me/sessions'),
       api('/api/me/login-history?size=50'),
-      api('/api/me/activity?size=50')
+      api('/api/me/activity?size=50'),
     ])
 
     if (identitiesRes.status === 'fulfilled') setIdentities(pageItems(identitiesRes.value))
     if (sessionsRes.status === 'fulfilled') setSessions(pageItems(sessionsRes.value))
     if (loginsRes.status === 'fulfilled') setLoginHistory(pageItems(loginsRes.value))
     if (activityRes.status === 'fulfilled') setActivityLogs(pageItems(activityRes.value))
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -84,7 +74,7 @@ export function AccountView({
       username: profile.username,
       email: profile.email,
       phoneNumber: profile.phoneNumber,
-      pictureUrl: profile.pictureUrl
+      pictureUrl: profile.pictureUrl,
     })
     if (ok) flash(t('changesSaved'))
   }
@@ -115,6 +105,28 @@ export function AccountView({
     }
   }
 
+  // 3b. Link Identity
+  const handleLinkSocial = async (provider) => {
+    if (provider === 'telegram') {
+      const username = window.prompt('Enter your Telegram username to link (e.g. johndoe_tg):')
+      if (username) {
+        const ok = await act('/api/auth/telegram/login', 'POST', {
+          id: String(Date.now()).slice(-8),
+          first_name: profile.givenName || 'User',
+          username: username.replace('@', ''),
+          auth_date: Math.floor(Date.now() / 1000),
+          hash: 'mock_hash_' + Date.now(),
+        })
+        if (ok) {
+          flash('Telegram identity linked!')
+          loadAll()
+        }
+      }
+    } else {
+      window.location.href = `/oauth2/authorization/${provider}?link=true`
+    }
+  }
+
   // 4. Terminate Individual Session
   const handleTerminateSession = async (sessionId) => {
     const ok = await act(`/api/me/sessions/${encodeURIComponent(sessionId)}`, 'DELETE')
@@ -135,479 +147,454 @@ export function AccountView({
     }
   }
 
-  // 6. Request Account Deactivation
-  const handleDeactivateAccount = async () => {
-    if (window.confirm(t('confirmDeactivateUser'))) {
-      const ok = await act('/api/me/deactivation-request', 'POST')
+  // 6. Deactivate Account
+  const handleDeactivate = async () => {
+    if (window.confirm(t('confirmDeactivate'))) {
+      const ok = await act('/api/me/deactivation-request', 'POST', {
+        reason: 'User self-requested deactivation',
+      })
       if (ok) {
-        flash('Account deactivation request processed. Signing out...')
-        setTimeout(() => {
-          clearToken()
-          window.location.reload()
-        }, 1500)
+        flash(t('changesSaved'))
+        setTimeout(() => window.location.reload(), 1500)
       }
     }
   }
 
-  // Token Save / Clear
-  const handleSaveToken = () => {
-    setToken(manualToken.trim())
-    if (onTokenChange) onTokenChange(manualToken.trim())
-    flash(t('changesSaved'))
-    window.location.reload()
-  }
+  const tabs = [
+    { id: 'profile', label: t('personalInfo'), icon: User },
+    { id: 'security', label: t('passwordAndSecurity'), icon: KeyRound },
+    { id: 'linked', label: `${t('linkedAccounts')} (${identities.length})`, icon: Share2 },
+    { id: 'sessions', label: `${t('activeSessionsTitle')} (${sessions.length})`, icon: Fingerprint },
+    { id: 'history', label: `${t('loginHistorySubtitle').split('.')[0]} (${loginHistory.length})`, icon: History },
+    { id: 'activity', label: `${t('accountActivityTitle')} (${activityLogs.length})`, icon: Activity },
+    { id: 'deactivate', label: t('deactivateAccount'), icon: AlertTriangle, danger: true },
+  ]
 
-  const handleClearToken = () => {
-    clearToken()
-    setManualToken('')
-    if (onTokenChange) onTokenChange('')
-    flash('Token removed')
-    window.location.reload()
-  }
+  const initials = label(profile)
+    .split(' ')
+    .map((s) => s[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   return (
-    <div className="account-container">
-      {loading && <div className="loading-bar" />}
-      {/* Account Sub-Navigation Tabs */}
-      <div className="account-tabs">
-        <button
-          className={`account-tab ${activeTab === 'profile' ? 'active' : ''}`}
-          onClick={() => changeTab('profile')}
-        >
-          <User size={15} /> {t('personalInfo')}
-        </button>
-        <button
-          className={`account-tab ${activeTab === 'security' ? 'active' : ''}`}
-          onClick={() => changeTab('security')}
-        >
-          <KeyRound size={15} /> {t('passwordAndSecurity')}
-        </button>
-        <button
-          className={`account-tab ${activeTab === 'linked' ? 'active' : ''}`}
-          onClick={() => changeTab('linked')}
-        >
-          <Share2 size={15} /> {t('linkedAccounts')} ({identities.length})
-        </button>
-        <button
-          className={`account-tab ${activeTab === 'sessions' ? 'active' : ''}`}
-          onClick={() => changeTab('sessions')}
-        >
-          <Fingerprint size={15} /> {t('activeSessionsTitle')} ({sessions.length})
-        </button>
-        <button
-          className={`account-tab ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => changeTab('history')}
-        >
-          <History size={15} /> {t('loginHistorySubtitle').split('.')[0]} ({loginHistory.length})
-        </button>
-        <button
-          className={`account-tab ${activeTab === 'activity' ? 'active' : ''}`}
-          onClick={() => changeTab('activity')}
-        >
-          <Activity size={15} /> {t('accountActivityTitle')} ({activityLogs.length})
-        </button>
-        <button
-          className={`account-tab account-tab-danger ${activeTab === 'deactivate' ? 'active' : ''}`}
-          onClick={() => changeTab('deactivate')}
-        >
-          <AlertTriangle size={15} /> {t('deactivateAccount')}
-        </button>
+    <div className="flex flex-col md:flex-row gap-8">
+      {/* Sidebar Tabs */}
+      <div className="w-full md:w-64 shrink-0 space-y-1.5">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => changeTab(tab.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition text-left ${
+                tab.danger
+                  ? isActive
+                    ? 'bg-rose-50 text-rose-700 font-bold'
+                    : 'text-rose-600 hover:bg-rose-50'
+                  : isActive
+                  ? 'bg-indigo-50 text-indigo-700 font-bold shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Icon size={17} />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
 
-      {/* Tab 1: Personal Info Profile */}
-      {activeTab === 'profile' && (
-        <div className="account-grid">
-          <section className="panel account-panel">
-            <div className="panel-heading">
+      {/* Main Tab Content */}
+      <div className="flex-1 min-w-0">
+        {/* 1. Profile */}
+        {activeTab === 'profile' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">{t('personalInfo')}</h2>
+              <p className="text-sm text-slate-500 mt-1">{t('personalInfoSubtitle')}</p>
+            </div>
+
+            <div className="flex items-center gap-5">
+              {profile.pictureUrl ? (
+                <img
+                  className="w-20 h-20 rounded-full object-cover border border-slate-200"
+                  src={profile.pictureUrl}
+                  alt="Avatar"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-indigo-100 text-indigo-700 font-bold text-2xl flex items-center justify-center border border-indigo-200">
+                  {initials}
+                </div>
+              )}
               <div>
-                <h2>{t('personalInfo')}</h2>
-                <p>{t('personalInfoSubtitle')}</p>
+                <div className="text-base font-bold text-slate-900">{t('profilePhoto')}</div>
+                <div className="text-sm text-slate-500 mt-0.5">{t('publicImageUrl')}</div>
               </div>
             </div>
 
-            <div className="profile-picture">
-              {profile.pictureUrl ? (
-                <img className="avatar large" src={profile.pictureUrl} alt="Avatar" />
-              ) : (
-                <div className="avatar large lilac">
-                  {label(profile).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <span>
-                <b>{t('profilePhoto')}</b>
-                <small>{t('publicImageUrl')}</small>
-              </span>
-            </div>
-
-            <form onSubmit={handleSaveProfile}>
-              <div className="form-grid">
-                <label>
-                  {t('firstName')}
+            <form onSubmit={handleSaveProfile} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('firstName')}</label>
                   <input
                     value={profile.givenName || ''}
                     onChange={(e) => setProfile({ ...profile, givenName: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
-                <label>
-                  {t('lastName')}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('lastName')}</label>
                   <input
                     value={profile.familyName || ''}
                     onChange={(e) => setProfile({ ...profile, familyName: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
-                <label>
-                  {t('username')}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('username')}</label>
                   <input
                     value={profile.username || ''}
                     onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
-                <label>
-                  {t('emailAddress')}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('emailAddress')}</label>
                   <input
                     type="email"
                     value={profile.email || ''}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
-                <label>
-                  {t('phoneNumber')}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('phoneNumber')}</label>
                   <input
                     value={profile.phoneNumber || ''}
                     onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
-                <label>
-                  {t('pictureUrl')}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('avatarUrl')}</label>
                   <input
-                    type="url"
                     value={profile.pictureUrl || ''}
                     onChange={(e) => setProfile({ ...profile, pictureUrl: e.target.value })}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
-                </label>
+                </div>
               </div>
 
-              <button type="submit" className="button button-primary save-settings">
-                {t('save')}
-              </button>
-            </form>
-          </section>
-
-          {/* Side Bearer Token Manager */}
-          <section className="panel token-panel">
-            <div>
-              <h2>{t('apiAccessToken')}</h2>
-              <p>{t('tokenSubtitle')}</p>
-            </div>
-            <div className="token-input">
-              <input
-                type="password"
-                placeholder={t('pasteTokenPlaceholder')}
-                value={manualToken}
-                onChange={(e) => setManualToken(e.target.value)}
-              />
-              <button type="button" className="button button-primary" onClick={handleSaveToken}>
-                {t('saveToken')}
-              </button>
-              {token && (
-                <button type="button" className="button button-quiet" onClick={handleClearToken}>
-                  <LogOut size={14} /> {t('clearToken')}
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 transition"
+                >
+                  <Save size={16} />
+                  <span>{t('saveChanges')}</span>
                 </button>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Tab 2: Password & Security */}
-      {activeTab === 'security' && (
-        <div className="account-grid">
-          <section className="panel settings-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>{t('passwordAndSecurity')}</h2>
-                <p>{t('passwordSubtitle')}</p>
               </div>
+            </form>
+          </div>
+        )}
+
+        {/* 2. Security & Password */}
+        {activeTab === 'security' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">{t('passwordAndSecurity')}</h2>
+              <p className="text-sm text-slate-500 mt-1">{t('changePasswordSubtitle')}</p>
             </div>
 
-            <form onSubmit={handleChangePassword} className="password-form">
-              <label>
-                {t('currentPassword')}
+            <form onSubmit={handleChangePassword} className="space-y-5 max-w-lg">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('currentPassword')}</label>
                 <input
                   type="password"
                   required
                   value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                 />
-              </label>
-              <label>
-                {t('newPassword')}
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                />
-              </label>
-              <label>
-                {t('confirmPassword')}
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                />
-              </label>
+              </div>
 
-              <button type="submit" className="button button-primary">
-                {t('updatePassword')}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('newPassword')}</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">{t('confirmPassword')}</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 transition"
+              >
+                <KeyRound size={16} />
+                <span>{t('updatePassword')}</span>
               </button>
             </form>
-          </section>
-        </div>
-      )}
-
-      {/* Tab 3: Linked Accounts */}
-      {activeTab === 'linked' && (
-        <section className="panel settings-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>{t('linkedAccounts')}</h2>
-              <p>{t('linkedAccountsSubtitle')}</p>
-            </div>
           </div>
+        )}
 
-          <div className="providers-list">
-            {['google', 'github', 'facebook', 'telegram'].map((provider) => {
-              const matched = identities.find(
-                (i) => String(i.provider).toLowerCase() === provider
-              )
-              return (
-                <div className="provider-row" key={provider}>
-                  <div className={`provider-icon ${provider}`}>
-                    {provider === 'google' ? 'G' : provider === 'github' ? '⌘' : provider === 'facebook' ? 'f' : '✈'}
-                  </div>
-                  <span>
-                    <b>{provider[0].toUpperCase() + provider.slice(1)}</b>
-                    <small>
-                      {matched
-                        ? `${t('connected')}: ${matched.email || matched.displayName || matched.providerUserId}`
-                        : t('notConnected')}
-                    </small>
-                  </span>
-                  {matched ? (
+        {/* 3. Linked Accounts */}
+        {activeTab === 'linked' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">{t('linkedAccounts')}</h2>
+              <p className="text-sm text-slate-500 mt-1">{t('linkedSubtitle')}</p>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+              {identities.length === 0 ? (
+                <div className="p-10 text-center text-slate-400 text-sm">
+                  No social accounts linked yet.
+                </div>
+              ) : (
+                identities.map((id) => (
+                  <div key={id.uuid || id.id} className="p-5 flex items-center justify-between hover:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm uppercase">
+                        {(id.provider || 'ID').slice(0, 2)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 capitalize">
+                          {id.provider}
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono mt-0.5">
+                          {id.providerUsername || id.email || id.subject}
+                        </div>
+                      </div>
+                    </div>
                     <button
-                      className="button button-danger"
-                      onClick={() => handleUnlinkIdentity(matched.uuid)}
+                      type="button"
+                      onClick={() => handleUnlinkIdentity(id.uuid)}
+                      className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
                     >
                       {t('unlink')}
                     </button>
-                  ) : (
-                    <button
-                      className="button button-quiet"
-                      onClick={() => {
-                        if (provider === 'telegram') {
-                          const username = window.prompt('Enter your Telegram username (e.g. sophea_tg):', 'sophea_tg')
-                          if (username) {
-                            const clean = username.replace(/^@/, '').trim()
-                            window.location.href = `/login/telegram?id=${Date.now()}&username=${encodeURIComponent(clean)}&first_name=${encodeURIComponent(clean)}`
-                          }
-                        } else {
-                          window.location.href = `/profile/accounts/${provider}/link`
-                        }
-                      }}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Link New Social Account Card */}
+            <div className="pt-6 border-t border-slate-100 space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Link Social Provider</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Connect third-party social accounts (Google, GitHub, Facebook, Telegram) to sign in seamlessly.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: 'google', name: 'Google', desc: 'Google Workspace or Gmail account', color: 'bg-red-50 text-red-600 border border-red-200' },
+                  { id: 'github', name: 'GitHub', desc: 'Developer account authentication', color: 'bg-slate-900 text-white border border-slate-800' },
+                  { id: 'facebook', name: 'Facebook', desc: 'Meta social identity sign-in', color: 'bg-blue-50 text-blue-600 border border-blue-200' },
+                  { id: 'telegram', name: 'Telegram', desc: 'Instant messaging identity linking', color: 'bg-sky-50 text-sky-600 border border-sky-200' },
+                ].map((prov) => {
+                  const isLinked = identities.some(
+                    (id) => (id.provider || '').toLowerCase() === prov.id.toLowerCase()
+                  )
+                  return (
+                    <div
+                      key={prov.id}
+                      className="p-4 rounded-xl border border-slate-200/90 flex items-center justify-between bg-slate-50/60"
                     >
-                      {t('connect')}
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Tab 4: Active Sessions */}
-      {activeTab === 'sessions' && (
-        <section className="panel audit-view">
-          <div className="panel-heading">
-            <div>
-              <h2>{t('activeSessionsTitle')}</h2>
-              <p>{t('activeSessionsSubtitle')}</p>
-            </div>
-            {sessions.length > 0 && (
-              <button className="button button-danger" onClick={handleSignOutAll}>
-                {t('signOutAll')}
-              </button>
-            )}
-          </div>
-
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t('thClientName')}</th>
-                  <th>{t('thDevice')}</th>
-                  <th>{t('thIpAddress')}</th>
-                  <th>{t('thLastActive')}</th>
-                  <th>{t('thExpires')}</th>
-                  <th>{t('thActions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sessions.map((s, idx) => (
-                  <tr key={s.id || idx}>
-                    <td>
-                      <div className="cell-with-icon">
-                        <Fingerprint size={15} />
-                        <b>{s.clientName || 'OAuth Client'}</b>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center uppercase shadow-xs ${prov.color}`}>
+                          {prov.name[0]}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">{prov.name}</div>
+                          <div className="text-xs text-slate-500">{prov.desc}</div>
+                        </div>
                       </div>
-                    </td>
-                    <td>{s.userAgent || 'Browser'}</td>
-                    <td>{s.ipAddress || '127.0.0.1'}</td>
-                    <td>{s.lastActivity ? new Date(s.lastActivity).toLocaleString() : 'Now'}</td>
-                    <td>{s.expiresAt ? new Date(s.expiresAt).toLocaleString() : 'Active'}</td>
-                    <td>
+
+                      {isLinked ? (
+                        <span className="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Linked
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleLinkSocial(prov.id)}
+                          className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-xs"
+                        >
+                          Link
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Active Sessions */}
+        {activeTab === 'sessions' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">{t('activeSessionsTitle')}</h2>
+                <p className="text-sm text-slate-500 mt-1">{t('activeSessionsSubtitle')}</p>
+              </div>
+              {sessions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSignOutAll}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                >
+                  <LogOut size={14} className="inline mr-1.5" />
+                  {t('endAllSessions')}
+                </button>
+              )}
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+              {sessions.length === 0 ? (
+                <div className="p-10 text-center text-slate-400 text-sm">No active sessions.</div>
+              ) : (
+                sessions.map((s, idx) => (
+                  <div key={idx} className="p-5 flex items-center justify-between hover:bg-slate-50">
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm font-bold text-slate-900">
+                          {s.clientName || 'IAM Console'}
+                        </span>
+                        {s.isCurrent && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500 font-mono mt-1">
+                        {s.ipAddress} · {s.userAgent}
+                      </div>
+                    </div>
+                    {!s.isCurrent && (
                       <button
-                        className="table-delete"
+                        type="button"
                         onClick={() => handleTerminateSession(s.id)}
+                        className="p-2 text-slate-400 hover:text-rose-600 rounded-xl"
                       >
-                        {t('endSession')}
+                        <Trash2 size={16} />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!sessions.length && <div className="empty-table">No active sessions found.</div>}
-          </div>
-        </section>
-      )}
-
-      {/* Tab 5: Login History */}
-      {activeTab === 'history' && (
-        <section className="panel audit-view">
-          <div className="panel-heading">
-            <div>
-              <h2>{t('loginHistorySubtitle').split('.')[0]}</h2>
-              <p>{t('loginHistorySubtitle')}</p>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
-            <button className="filter-button" onClick={loadAll}>
-              <RefreshCw size={14} /> {t('refresh')}
-            </button>
           </div>
+        )}
 
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t('thStatus')}</th>
-                  <th>{t('thEvent')}</th>
-                  <th>{t('thIpAddress')}</th>
-                  <th>{t('thDevice')}</th>
-                  <th>{t('thTimestamp')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loginHistory.map((lh, idx) => (
-                  <tr key={lh.id || idx}>
-                    <td>
-                      <span className={`event-pill ${lh.succeeded ? 'success' : 'failed'}`}>
-                        {lh.succeeded ? t('success') : t('failed')}
+        {/* 5. Login History */}
+        {activeTab === 'history' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">Login History</h2>
+              <p className="text-sm text-slate-500 mt-1">{t('loginHistorySubtitle')}</p>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden max-h-96 overflow-y-auto">
+              {loginHistory.length === 0 ? (
+                <div className="p-10 text-center text-slate-400 text-sm">No login history.</div>
+              ) : (
+                loginHistory.map((h, idx) => (
+                  <div key={idx} className="p-4 flex items-center justify-between text-sm hover:bg-slate-50">
+                    <div>
+                      <span className="font-bold text-slate-900">{h.eventType}</span>
+                      <div className="text-xs text-slate-500 font-mono mt-0.5">
+                        {h.ipAddress} · {h.userAgent}
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono">
+                      {h.timestamp ? new Date(h.timestamp).toLocaleString() : ''}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 6. Account Activity */}
+        {activeTab === 'activity' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">{t('accountActivityTitle')}</h2>
+              <p className="text-sm text-slate-500 mt-1">{t('accountActivitySubtitle')}</p>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden max-h-96 overflow-y-auto">
+              {activityLogs.length === 0 ? (
+                <div className="p-10 text-center text-slate-400 text-sm">No activity logs recorded.</div>
+              ) : (
+                activityLogs.map((a, idx) => (
+                  <div key={idx} className="p-4 text-sm hover:bg-slate-50">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900">{a.eventType}</span>
+                      <span className="text-xs text-slate-400 font-mono">
+                        {a.timestamp ? new Date(a.timestamp).toLocaleString() : ''}
                       </span>
-                    </td>
-                    <td>
-                      <b>{lh.type}</b>
-                    </td>
-                    <td>{lh.ipAddress || 'unknown'}</td>
-                    <td>{lh.userAgent || 'Unknown Device'}</td>
-                    <td>{lh.createdAt ? new Date(lh.createdAt).toLocaleString() : ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!loginHistory.length && <div className="empty-table">No login history records found.</div>}
-          </div>
-        </section>
-      )}
-
-      {/* Tab 6: Account Activity */}
-      {activeTab === 'activity' && (
-        <section className="panel audit-view">
-          <div className="panel-heading">
-            <div>
-              <h2>{t('accountActivityTitle')}</h2>
-              <p>{t('accountActivitySubtitle')}</p>
-            </div>
-            <button className="filter-button" onClick={loadAll}>
-              <RefreshCw size={14} /> {t('refresh')}
-            </button>
-          </div>
-
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t('thEvent')}</th>
-                  <th>{t('thActor')}</th>
-                  <th>{t('thTarget')}</th>
-                  <th>DETAILS</th>
-                  <th>{t('thIpAddress')}</th>
-                  <th>{t('thTimestamp')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activityLogs.map((act, idx) => (
-                  <tr key={act.id || idx}>
-                    <td>
-                      <b>{act.type}</b>
-                    </td>
-                    <td>{act.actor}</td>
-                    <td>{act.target || '—'}</td>
-                    <td>{act.detail || '—'}</td>
-                    <td>{act.ipAddress || '—'}</td>
-                    <td>{act.createdAt ? new Date(act.createdAt).toLocaleString() : ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!activityLogs.length && <div className="empty-table">No security activity records found.</div>}
-          </div>
-        </section>
-      )}
-
-      {/* Tab 7: Account Deactivation */}
-      {activeTab === 'deactivate' && (
-        <section className="panel settings-panel danger-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>{t('deactivateAccount')}</h2>
-              <p>{t('deactivateSubtitle')}</p>
+                    </div>
+                    <div className="text-xs text-slate-600 mt-1">{a.detail}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
+        )}
 
-          <div className="danger-box">
-            <AlertTriangle size={24} className="danger-icon" />
-            <div>
-              <b>Warning: Irreversible action</b>
-              <p>
-                Requesting account deactivation will immediately disable your profile, revoke all
-                OAuth authorization tokens, and disconnect linked social logins.
+        {/* 7. Deactivate */}
+        {activeTab === 'deactivate' && (
+          <div className="bg-white rounded-2xl border border-rose-200 p-8 space-y-6 shadow-sm">
+            <div className="border-b border-rose-100 pb-4">
+              <h2 className="text-base font-bold text-rose-800">{t('deactivateAccount')}</h2>
+              <p className="text-sm text-rose-600 mt-1">
+                Permanently revoke active sessions and disable your user account.
               </p>
             </div>
-          </div>
 
-          <button
-            className="button button-danger"
-            style={{ marginTop: '16px' }}
-            onClick={handleDeactivateAccount}
-          >
-            {t('requestDeactivation')}
-          </button>
-        </section>
-      )}
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Once you request account deactivation, all current sessions and tokens will be revoked.
+              You will not be able to sign in until a workspace administrator re-enables your account.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleDeactivate}
+              className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+            >
+              {t('confirmDeactivate')}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

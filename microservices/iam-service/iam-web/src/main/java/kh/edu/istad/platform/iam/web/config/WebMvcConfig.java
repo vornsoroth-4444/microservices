@@ -41,9 +41,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addViewControllers(org.springframework.web.servlet.config.annotation.ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index.html");
         registry.addViewController("/login").setViewName("forward:/index.html");
-        registry.addViewController("/profile/**").setViewName("forward:/index.html");
+        registry.addViewController("/overview").setViewName("forward:/index.html");
+        registry.addViewController("/users").setViewName("forward:/index.html");
+        registry.addViewController("/roles").setViewName("forward:/index.html");
+        registry.addViewController("/permissions").setViewName("forward:/index.html");
+        registry.addViewController("/clients").setViewName("forward:/index.html");
+        registry.addViewController("/sessions").setViewName("forward:/index.html");
+        registry.addViewController("/audit").setViewName("forward:/index.html");
+        registry.addViewController("/config").setViewName("forward:/index.html");
+        registry.addViewController("/account/**").setViewName("forward:/index.html");
         registry.addViewController("/iam-ui").setViewName("forward:/index.html");
-        registry.addViewController("/iam-ui/").setViewName("forward:/index.html");
+        registry.addViewController("/iam-ui/**").setViewName("forward:/index.html");
     }
 
     @Override

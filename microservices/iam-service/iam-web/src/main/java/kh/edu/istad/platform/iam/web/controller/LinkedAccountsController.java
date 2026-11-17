@@ -40,7 +40,7 @@ public class LinkedAccountsController {
     @GetMapping("/{provider}/link")
     public String beginLink(Authentication auth,
                             jakarta.servlet.http.HttpServletRequest request,
-                            @PathVariable String provider) {
+                            @PathVariable("provider") String provider) {
         Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
         String normalized = provider.toLowerCase(Locale.ROOT);
         if (userOpt.isEmpty() || !Set.of("google", "github", "facebook", "telegram").contains(normalized)) {
@@ -55,7 +55,7 @@ public class LinkedAccountsController {
 
     @PostMapping("/{identityUuid}/unlink")
     public String unlinkAccount(Authentication auth,
-                                @PathVariable UUID identityUuid,
+                                @PathVariable("identityUuid") UUID identityUuid,
                                 RedirectAttributes redirectAttributes) {
         Optional<User> userOpt = webUserResolver.resolveCurrentUser(auth);
         if (userOpt.isEmpty()) {
