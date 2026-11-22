@@ -2,20 +2,33 @@ pluginManagement {
     includeBuild('../build-logic')
 
     repositories {
+        maven {
+            name = 'NexusProxy'
+            url = uri("${providers.gradleProperty('nexus.url').getOrElse('http://localhost:28081')}/repository/maven-public/")
+            allowInsecureProtocol = true
+        }
         gradlePluginPortal()
         mavenCentral()
     }
 }
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
+        maven {
+            name = 'NexusPublic'
+            url = uri("${providers.gradleProperty('nexus.url').getOrElse('http://localhost:28081')}/repository/maven-public/")
+            allowInsecureProtocol = true
+            credentials {
+                username = providers.gradleProperty('nexus.username').orNull ?: System.getenv('NEXUS_USERNAME') ?: 'admin'
+                password = providers.gradleProperty('nexus.password').orNull ?: System.getenv('NEXUS_PASSWORD') ?: 'vornsoroth'
+            }
+        }
         mavenCentral()
     }
     versionCatalogs {
-        libs{
-            from(
-                    files("../gradle/libs.versions.toml")
-            )
+        libs {
+            from(files("../gradle/libs.versions.toml"))
         }
     }
 }
@@ -25,3 +38,4 @@ include 'istad-common-domain'
 include 'istad-common-restapi'
 include 'istad-common-swagger'
 include 'istad-common-webflux'
+include 'istad-common-bom'

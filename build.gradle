@@ -1,0 +1,6 @@
+tasks.register('publishCommon', GradleBuild) {
+    description = 'Publishes all istad-common libraries and BOM to Nexus'
+    group = 'publishing'
+    dir = file('istad-common')
+    tasks = ['publish']
+}

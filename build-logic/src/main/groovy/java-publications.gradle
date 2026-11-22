@@ -1,0 +1,26 @@
+plugins {
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'nexus'
+            def baseUrl = providers.gradleProperty('nexus.url').getOrElse('http://localhost:28081')
+            def releasesRepoUrl = uri("${baseUrl}/repository/maven-releases/")
+            def snapshotsRepoUrl = uri("${baseUrl}/repository/maven-snapshots/")
+            url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            allowInsecureProtocol = true
+
+            credentials {
+                username = providers.gradleProperty('nexus.username').orNull ?: System.getenv('NEXUS_USERNAME') ?: 'admin'
+                password = providers.gradleProperty('nexus.password').orNull ?: System.getenv('NEXUS_PASSWORD') ?: 'vornsoroth'
+            }
+        }
+    }
+}

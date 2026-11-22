@@ -1,0 +1,53 @@
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+group = 'kh.edu.istad'
+version = '1.0.0'
+
+javaPlatform {
+    allowDependencies()
+}
+
+dependencies {
+    constraints {
+        // ISTAD Common Modules
+        api "kh.edu.istad:istad-common-domain:${version}"
+        api "kh.edu.istad:istad-common-restapi:${version}"
+        api "kh.edu.istad:istad-common-swagger:${version}"
+        api "kh.edu.istad:istad-common-webflux:${version}"
+
+        // Standard Third-Party Libraries
+        api 'org.apache.commons:commons-lang3:3.14.0'
+        api 'com.google.guava:guava:33.2.1-jre'
+        api 'org.projectlombok:lombok:1.18.34'
+        api 'org.mapstruct:mapstruct:1.6.3'
+    }
+}
+
+publishing {
+    publications {
+        platform(MavenPublication) {
+            groupId = project.group
+            artifactId = 'istad-common-bom'
+            version = project.version
+            from components.javaPlatform
+        }
+    }
+    repositories {
+        maven {
+            name = 'nexus'
+            def baseUrl = providers.gradleProperty('nexus.url').getOrElse('http://localhost:28081')
+            def releasesRepoUrl = uri("${baseUrl}/repository/maven-releases/")
+            def snapshotsRepoUrl = uri("${baseUrl}/repository/maven-snapshots/")
+            url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            allowInsecureProtocol = true
+
+            credentials {
+                username = providers.gradleProperty('nexus.username').orNull ?: System.getenv('NEXUS_USERNAME') ?: 'admin'
+                password = providers.gradleProperty('nexus.password').orNull ?: System.getenv('NEXUS_PASSWORD') ?: 'vornsoroth'
+            }
+        }
+    }
+}

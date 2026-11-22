@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+    implementation platform(libs.istad.common.bom)
     api 'kh.edu.istad:istad-common-domain'
 }

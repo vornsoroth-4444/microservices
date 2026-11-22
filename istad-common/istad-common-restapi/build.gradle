@@ -1,13 +1,10 @@
 plugins {
-    id 'java'
+    id 'java-common-conventions'
+    id 'java-publications'
 }
 
-group = 'org.soroth'
-version = '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
-}
+group = 'kh.edu.istad'
+version = '1.0.0'
 
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')

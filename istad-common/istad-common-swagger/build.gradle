@@ -1,7 +1,17 @@
 plugins {
     id 'spring-boot-common-conventions'
+    id 'java-publications'
+}
+//version=1.0.1
+
+bootJar {
+    enabled = false
 }
 
-dependencies{
+jar {
+    enabled = true
+}
+
+dependencies {
     implementation libs.springdoc.openapi.starter.webmvc.ui
 }
