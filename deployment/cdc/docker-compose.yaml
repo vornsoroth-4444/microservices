@@ -1,0 +1,89 @@
+##############################################################
+#  CDC Pipeline – Kafka Connect (Debezium) + Schema Registry
+#  Oracle  ──►  Kafka  ──►  PostgreSQL
+##############################################################
+
+networks:
+  ite-net:
+    external: true
+
+volumes:
+  istad-connect-vol:
+    driver: local
+  istad-schema-registry-vol:
+    driver: local
+
+services:
+
+  # ──────────────────────────────────────────────────────────
+  #  Kafka Connect Worker with Debezium Oracle + JDBC Sink
+  # ──────────────────────────────────────────────────────────
+  istad-kafka-connect:
+    build:
+      context: ./kafka-connect
+      dockerfile: Dockerfile
+    image: istad-debezium-connect:latest
+    container_name: istad-kafka-connect
+    hostname: istad-kafka-connect
+    ports:
+      - "8083:8083"
+    command:
+      - bash
+      - -c
+      - |
+        cat << 'EOF' > /tmp/connect.properties
+        bootstrap.servers=istad-kafka-1:9090,istad-kafka-2:9090,istad-kafka-3:9090
+        group.id=istad-cdc-connect-group
+        key.converter=org.apache.kafka.connect.json.JsonConverter
+        value.converter=org.apache.kafka.connect.json.JsonConverter
+        key.converter.schemas.enable=true
+        value.converter.schemas.enable=true
+        offset.storage.topic=_connect-offsets
+        offset.storage.replication.factor=3
+        config.storage.topic=_connect-configs
+        config.storage.replication.factor=3
+        status.storage.topic=_connect-status
+        status.storage.replication.factor=3
+        offset.flush.interval.ms=10000
+        rest.port=8083
+        rest.advertised.name=istad-kafka-connect
+        rest.advertised.port=8083
+        plugin.path=/usr/share/java/kafka-connect-plugins
+        EOF
+        echo "Starting Kafka Connect distributed worker..."
+        exec /usr/bin/connect-distributed /tmp/connect.properties
+    volumes:
+      - istad-connect-vol:/kafka/connect
+    networks:
+      - ite-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8083/connectors')\" || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────
+  #  Confluent Schema Registry
+  # ──────────────────────────────────────────────────────────
+  istad-schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    container_name: istad-schema-registry
+    hostname: istad-schema-registry
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: istad-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: istad-kafka-1:9090,istad-kafka-2:9090,istad-kafka-3:9090
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 3
+      SCHEMA_REGISTRY_DEBUG: "false"
+    depends_on:
+      - istad-kafka-connect
+    volumes:
+      - istad-schema-registry-vol:/var/lib/schema-registry
+    networks:
+      - ite-net
+    restart: unless-stopped

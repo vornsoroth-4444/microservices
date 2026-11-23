@@ -1,0 +1,35 @@
+{
+  "name": "postgres-cdc-sink",
+  "config": {
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+
+    "connection.url": "jdbc:postgresql://ite-postgres:5432/db_customer",
+    "connection.username": "iteuser",
+    "connection.password": "qwerqwer",
+
+    "topics": "oracle-cdc.APPUSER.CUSTOMERS,oracle-cdc.APPUSER.ORDERS,oracle-cdc.APPUSER.PRODUCTS",
+
+    "insert.mode": "upsert",
+    "primary.key.mode": "record_key",
+    "delete.enabled": "true",
+
+    "auto.create": "true",
+    "auto.evolve": "true",
+    "schema.evolution": "basic",
+
+    "transforms": "routeByTable",
+    "transforms.routeByTable.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.routeByTable.regex": "oracle-cdc\\.APPUSER\\.(.*)",
+    "transforms.routeByTable.replacement": "cdc_$1",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+  }
+}

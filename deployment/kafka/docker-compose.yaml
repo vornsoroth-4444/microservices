@@ -96,14 +96,12 @@ services:
       - istad-kafka-1
       - istad-kafka-2
       - istad-kafka-3
-#      - istad-schema-registry
-#      - istad-debezium-kafka-connect
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: istad-kafka-1:9090,istad-kafka-2:9090,istad-kafka-3:9090
-#      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://istad-schema-registry:8081
-#      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: first
-#      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://istad-debezium-kafka-connect:8083
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://istad-schema-registry:8081
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: istad-cdc-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://istad-kafka-connect:8083
       DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
       ite-net:

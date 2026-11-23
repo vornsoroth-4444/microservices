@@ -1,0 +1,318 @@
+{
+  "info": {
+    "name": "CDC Pipeline (Debezium & Kafka Connect)",
+    "description": "Complete Postman collection to monitor, test, and control the Debezium Oracle-to-PostgreSQL Change Data Capture (CDC) pipeline via Kafka Connect REST API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "CONNECT_URL",
+      "value": "http://localhost:8083",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Discovery",
+      "item": [
+        {
+          "name": "Cluster Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/",
+              "host": ["{{CONNECT_URL}}"],
+              "path": [""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Kafka Connect is online with cluster ID', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.version).to.be.a('string');",
+                  "    pm.expect(json.kafka_cluster_id).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Installed Connector Plugins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connector-plugins",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connector-plugins"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Debezium Oracle and JDBC plugins are installed', function () {",
+                  "    var plugins = pm.response.json();",
+                  "    var classes = plugins.map(p => p.class);",
+                  "    pm.expect(classes).to.include('io.debezium.connector.oracle.OracleConnector');",
+                  "    pm.expect(classes).to.include('io.debezium.connector.jdbc.JdbcSinkConnector');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Active Connectors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Both CDC connectors are registered', function () {",
+                  "    var connectors = pm.response.json();",
+                  "    pm.expect(connectors).to.include('oracle-cdc-source');",
+                  "    pm.expect(connectors).to.include('postgres-cdc-sink');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "All Connectors Status (Expanded)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors?expand=status",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors"],
+              "query": [
+                {
+                  "key": "expand",
+                  "value": "status"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All connectors and tasks are RUNNING', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data['oracle-cdc-source'].status.connector.state).to.eql('RUNNING');",
+                  "    pm.expect(data['oracle-cdc-source'].status.tasks[0].state).to.eql('RUNNING');",
+                  "    pm.expect(data['postgres-cdc-sink'].status.connector.state).to.eql('RUNNING');",
+                  "    pm.expect(data['postgres-cdc-sink'].status.tasks[0].state).to.eql('RUNNING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Oracle Source Connector",
+      "item": [
+        {
+          "name": "Get Oracle Source Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/oracle-cdc-source/status",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "oracle-cdc-source", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Source connector is RUNNING', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.connector.state).to.eql('RUNNING');",
+                  "    pm.expect(json.tasks[0].state).to.eql('RUNNING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Oracle Source Config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/oracle-cdc-source/config",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "oracle-cdc-source", "config"]
+            }
+          }
+        },
+        {
+          "name": "Restart Oracle Source Task 0",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/oracle-cdc-source/tasks/0/restart",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "oracle-cdc-source", "tasks", "0", "restart"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pause Oracle Source",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/oracle-cdc-source/pause",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "oracle-cdc-source", "pause"]
+            }
+          }
+        },
+        {
+          "name": "Resume Oracle Source",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/oracle-cdc-source/resume",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "oracle-cdc-source", "resume"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. PostgreSQL Sink Connector",
+      "item": [
+        {
+          "name": "Get PostgreSQL Sink Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/postgres-cdc-sink/status",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "postgres-cdc-sink", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Sink connector is RUNNING', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.connector.state).to.eql('RUNNING');",
+                  "    pm.expect(json.tasks[0].state).to.eql('RUNNING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get PostgreSQL Sink Config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/postgres-cdc-sink/config",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "postgres-cdc-sink", "config"]
+            }
+          }
+        },
+        {
+          "name": "Restart PostgreSQL Sink Task 0",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{CONNECT_URL}}/connectors/postgres-cdc-sink/tasks/0/restart",
+              "host": ["{{CONNECT_URL}}"],
+              "path": ["connectors", "postgres-cdc-sink", "tasks", "0", "restart"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
