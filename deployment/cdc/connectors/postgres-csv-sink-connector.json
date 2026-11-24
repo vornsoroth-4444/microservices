@@ -1,0 +1,38 @@
+{
+  "name": "postgres-csv-sink",
+  "config": {
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+
+    "connection.url": "jdbc:postgresql://ite-postgres:5432/db_csv_dest",
+    "connection.username": "iteuser",
+    "connection.password": "qwerqwer",
+
+    "topics": "pg-csv-cdc.csv_import.customers,pg-csv-cdc.csv_import.products,pg-csv-cdc.csv_import.orders",
+
+    "insert.mode": "upsert",
+    "primary.key.mode": "record_key",
+    "delete.enabled": "true",
+
+    "auto.create": "false",
+    "auto.evolve": "false",
+    "schema.evolution": "none",
+
+    "table.name.format": "csv_cdc.${topic}",
+
+    "transforms": "stripPrefix",
+
+    "transforms.stripPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.stripPrefix.regex": "pg-csv-cdc\\.csv_import\\.(.*)",
+    "transforms.stripPrefix.replacement": "$1",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+  }
+}

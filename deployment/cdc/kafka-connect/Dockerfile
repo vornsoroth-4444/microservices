@@ -18,7 +18,15 @@ RUN mkdir -p debezium-oracle \
     "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/23.3.0.23.09/ojdbc11-23.3.0.23.09.jar" \
     -o debezium-oracle/ojdbc11.jar
 
-# ── 2. Debezium JDBC Sink Connector (v3.0.0 for Kafka 3.8+) ───
+# ── 2. Debezium PostgreSQL Source Connector (v3.0.0 for Kafka 3.8+) ─
+RUN mkdir -p debezium-postgres \
+ && curl -fsSL \
+    "https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/3.0.0.Final/debezium-connector-postgres-3.0.0.Final-plugin.tar.gz" \
+    -o /tmp/debezium-postgres.tar.gz \
+ && tar -xzf /tmp/debezium-postgres.tar.gz -C debezium-postgres --strip-components=1 \
+ && rm -f /tmp/debezium-postgres.tar.gz
+
+# ── 3. Debezium JDBC Sink Connector (v3.0.0 for Kafka 3.8+) ───
 RUN mkdir -p debezium-jdbc \
  && curl -fsSL \
     "https://repo1.maven.org/maven2/io/debezium/debezium-connector-jdbc/3.0.0.Final/debezium-connector-jdbc-3.0.0.Final-plugin.tar.gz" \
@@ -26,7 +34,7 @@ RUN mkdir -p debezium-jdbc \
  && tar -xzf /tmp/debezium-jdbc.tar.gz -C debezium-jdbc --strip-components=1 \
  && rm -f /tmp/debezium-jdbc.tar.gz
 
-# ── 3. PostgreSQL JDBC driver ────────────────────────────────
+# ── 4. PostgreSQL JDBC driver ────────────────────────────────
 RUN curl -fsSL \
     "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar" \
     -o debezium-jdbc/postgresql-42.7.3.jar
@@ -40,6 +48,12 @@ USER root
 
 # Copy downloaded plugins from downloader stage
 COPY --from=downloader /plugins /usr/share/java/kafka-connect-plugins
+
+# Copy Kafka 3.8+ compatibility shim for Debezium Sanitizer
+COPY kafka-compat-sanitizer.jar /usr/share/java/kafka/
+COPY kafka-compat-sanitizer.jar /usr/share/java/kafka-connect-plugins/debezium-oracle/
+COPY kafka-compat-sanitizer.jar /usr/share/java/kafka-connect-plugins/debezium-postgres/
+COPY kafka-compat-sanitizer.jar /usr/share/java/kafka-connect-plugins/debezium-jdbc/
 
 # Create connect configuration directories
 RUN mkdir -p /etc/kafka /kafka/connect

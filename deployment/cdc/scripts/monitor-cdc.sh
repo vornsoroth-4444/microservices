@@ -56,11 +56,11 @@ check_postgres() {
       table_name,
       COUNT(*) AS rows
     FROM (
-      SELECT 'customers' AS table_name, id FROM cdc_replica.customers
+      SELECT 'customers' AS table_name, id FROM cdc_customers
       UNION ALL
-      SELECT 'orders',   id FROM cdc_replica.orders
+      SELECT 'orders',   id FROM cdc_orders
       UNION ALL
-      SELECT 'products', id FROM cdc_replica.products
+      SELECT 'products', id FROM cdc_products
     ) t
     GROUP BY table_name
     ORDER BY table_name;

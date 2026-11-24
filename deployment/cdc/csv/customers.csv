@@ -1,0 +1,21 @@
+id,first_name,last_name,email,phone,city,country,status,created_at
+1,Sokha,Chan,sokha.chan@example.com,0123456789,Phnom Penh,Cambodia,ACTIVE,2024-01-15 08:30:00
+2,Dara,Pich,dara.pich@example.com,0987654321,Phnom Penh,Cambodia,ACTIVE,2024-01-16 09:00:00
+3,Malis,Heng,malis.heng@example.com,0112233445,Siem Reap,Cambodia,ACTIVE,2024-01-17 10:15:00
+4,Vanna,Lim,vanna.lim@example.com,0998877665,Battambang,Cambodia,ACTIVE,2024-01-18 11:30:00
+5,Chenda,Ky,chenda.ky@example.com,0776655443,Phnom Penh,Cambodia,ACTIVE,2024-01-19 12:00:00
+6,Ratana,Sok,ratana.sok@example.com,0665544332,Kampong Cham,Cambodia,INACTIVE,2024-01-20 13:30:00
+7,Bopha,Men,bopha.men@example.com,0554433221,Siem Reap,Cambodia,ACTIVE,2024-01-21 14:00:00
+8,Kimhak,Ros,kimhak.ros@example.com,0443322110,Phnom Penh,Cambodia,ACTIVE,2024-01-22 15:15:00
+9,Sreymom,Nhem,sreymom.nhem@example.com,0332211009,Battambang,Cambodia,ACTIVE,2024-01-23 16:30:00
+10,Piseth,Oum,piseth.oum@example.com,0221100998,Kampot,Cambodia,ACTIVE,2024-01-24 17:00:00
+11,Sophal,Yim,sophal.yim@example.com,0119988776,Phnom Penh,Cambodia,ACTIVE,2024-01-25 08:00:00
+12,Chanthou,Khun,chanthou.khun@example.com,0998866554,Prey Veng,Cambodia,INACTIVE,2024-01-26 09:30:00
+13,Visal,Tep,visal.tep@example.com,0887755443,Kampong Speu,Cambodia,ACTIVE,2024-01-27 10:00:00
+14,Sreynit,Ly,sreynit.ly@example.com,0776644332,Phnom Penh,Cambodia,ACTIVE,2024-01-28 11:00:00
+15,Molika,Sar,molika.sar@example.com,0665533221,Takeo,Cambodia,ACTIVE,2024-01-29 12:30:00
+16,Davi,Kong,davi.kong@example.com,0554422110,Siem Reap,Cambodia,ACTIVE,2024-01-30 13:00:00
+17,Rachana,Pov,rachana.pov@example.com,0443311009,Phnom Penh,Cambodia,ACTIVE,2024-01-31 14:00:00
+18,Chanra,Horn,chanra.horn@example.com,0332200998,Kampong Thom,Cambodia,ACTIVE,2024-02-01 15:00:00
+19,Leakna,Suon,leakna.suon@example.com,0221199887,Phnom Penh,Cambodia,ACTIVE,2024-02-02 16:00:00
+20,Borey,Tith,borey.tith@example.com,0110088776,Koh Kong,Cambodia,INACTIVE,2024-02-03 17:00:00

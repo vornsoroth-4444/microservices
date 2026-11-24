@@ -1,0 +1,26 @@
+id,product_name,category,price,stock_qty,supplier,sku,is_active
+1,Laptop Pro 15,Electronics,1299.99,50,TechSupply Co,SKU-LAP-001,true
+2,Wireless Mouse,Accessories,29.99,200,PeriphCo,SKU-MOU-001,true
+3,Mechanical Keyboard RGB,Accessories,89.99,100,KeyMaster Ltd,SKU-KEY-001,true
+4,27-inch 4K Monitor,Electronics,399.99,30,DisplayPro,SKU-MON-001,true
+5,USB-C Hub 7-Port,Accessories,49.99,150,HubTech,SKU-HUB-001,true
+6,Noise Cancelling Headphones,Electronics,199.99,75,AudioWorld,SKU-HPH-001,true
+7,Webcam Full HD 1080p,Accessories,79.99,120,VisionCam,SKU-WEB-001,true
+8,Portable SSD 1TB,Storage,109.99,80,StoragePro,SKU-SSD-001,true
+9,Gaming Chair Pro,Furniture,249.99,25,ComfortSeating,SKU-CHR-001,true
+10,Smart LED Desk Lamp,Electronics,39.99,300,BrightLight,SKU-LMP-001,true
+11,USB-C Charging Cable 2m,Accessories,12.99,500,CableMaster,SKU-CBL-001,true
+12,Anti-glare Screen Filter,Accessories,19.99,200,ScreenGuard,SKU-SCR-001,true
+13,Laptop Stand Adjustable,Accessories,34.99,160,StandIt,SKU-STD-001,true
+14,Bluetooth Speaker Portable,Electronics,59.99,90,SoundBox,SKU-SPK-001,true
+15,Ergonomic Mouse Pad XL,Accessories,15.99,400,DeskMate,SKU-PAD-001,true
+16,32GB RAM DDR5,Components,89.99,70,MemoryPlus,SKU-RAM-001,true
+17,RTX 4070 Graphics Card,Components,599.99,20,GPUWorld,SKU-GPU-001,true
+18,NVMe SSD 500GB,Storage,69.99,110,FastDrive,SKU-NVM-001,true
+19,Wireless Earbuds Pro,Electronics,129.99,140,EarTech,SKU-EAR-001,true
+20,Cable Management Box,Accessories,22.99,250,NeatDesk,SKU-BOX-001,true
+21,Smart Power Strip 6-Outlet,Electronics,45.99,180,PowerSave,SKU-PWR-001,true
+22,Mini PC Intel i5,Electronics,349.99,40,MiniCompCo,SKU-MPC-001,true
+23,HDMI Cable 4K 2m,Accessories,9.99,600,CableKing,SKU-HDM-001,true
+24,USB 3.0 Flash Drive 64GB,Storage,14.99,350,FlashPro,SKU-USB-001,true
+25,Laptop Backpack 17-inch,Bags,55.99,100,CarryIt,SKU-BAG-001,true

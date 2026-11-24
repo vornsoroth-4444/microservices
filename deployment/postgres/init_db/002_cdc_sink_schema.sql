@@ -4,6 +4,8 @@
 --  Run once against db_customer (or your target DB).
 -- ============================================================
 
+\c db_customer;
+
 -- ── Schema to hold CDC-replicated tables ──────────────────
 CREATE SCHEMA IF NOT EXISTS cdc_replica;
 

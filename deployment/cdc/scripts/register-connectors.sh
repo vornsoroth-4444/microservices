@@ -36,10 +36,19 @@ register_or_update() {
 
   if [ "${HTTP_CODE}" -eq 200 ]; then
     echo "   ↳ Connector exists – updating config ..."
-    curl -sf -X PUT \
-      -H "Content-Type: application/json" \
-      --data "@${file}" \
-      "${CONNECT_URL}/connectors/${name}/config" | jq .
+    if command -v jq >/dev/null 2>&1; then
+      jq -c '.config // .' "${file}" | curl -sf -X PUT \
+        -H "Content-Type: application/json" \
+        -d @- \
+        "${CONNECT_URL}/connectors/${name}/config" | jq .
+    else
+      curl -sf -X DELETE "${CONNECT_URL}/connectors/${name}"
+      sleep 1
+      curl -sf -X POST \
+        -H "Content-Type: application/json" \
+        --data "@${file}" \
+        "${CONNECT_URL}/connectors"
+    fi
   else
     echo "   ↳ Creating new connector ..."
     curl -sf -X POST \

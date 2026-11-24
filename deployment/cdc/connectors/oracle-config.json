@@ -10,7 +10,7 @@
   "table.include.list": "APPUSER.CUSTOMERS,APPUSER.ORDERS,APPUSER.PRODUCTS",
   "log.mining.strategy": "online_catalog",
   "log.mining.continuous.mine": "false",
-  "snapshot.mode": "recovery",
+  "snapshot.mode": "initial",
   "snapshot.locking.mode": "none",
   "tombstones.on.delete": "true",
   "decimal.handling.mode": "double",

@@ -16,5 +16,6 @@ services:
     volumes:
       - ite-pg-vol:/var/lib/postgresql/18/docker
       - ./init_db/:/docker-entrypoint-initdb.d
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=10", "-c", "max_wal_senders=10"]
     networks:
       - ite-net

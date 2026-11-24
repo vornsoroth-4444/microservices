@@ -16,7 +16,7 @@
     "log.mining.strategy": "online_catalog",
     "log.mining.continuous.mine": "false",
 
-    "snapshot.mode": "recovery",
+    "snapshot.mode": "initial",
     "snapshot.locking.mode": "none",
 
     "tombstones.on.delete": "true",

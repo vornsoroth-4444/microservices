@@ -1,0 +1,38 @@
+{
+  "name": "postgres-csv-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "ite-postgres",
+    "database.port": "5432",
+    "database.user": "iteuser",
+    "database.password": "qwerqwer",
+    "database.dbname": "db_csv_source",
+    "database.server.name": "pg-csv-cdc",
+
+    "topic.prefix": "pg-csv-cdc",
+    "plugin.name": "pgoutput",
+    "publication.name": "dbz_csv_publication",
+    "slot.name": "debezium_csv_slot",
+
+    "table.include.list": "csv_import.customers,csv_import.products,csv_import.orders",
+
+    "snapshot.mode": "initial",
+    "tombstones.on.delete": "true",
+    "decimal.handling.mode": "double",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "schema.history.internal": "io.debezium.storage.kafka.history.KafkaSchemaHistory",
+    "schema.history.internal.kafka.bootstrap.servers": "istad-kafka-1:9090,istad-kafka-2:9090,istad-kafka-3:9090",
+    "schema.history.internal.kafka.topic": "_pg-csv-schema-history",
+
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+  }
+}

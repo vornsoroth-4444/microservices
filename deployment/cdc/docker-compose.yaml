@@ -68,7 +68,7 @@ services:
   #  Confluent Schema Registry
   # ──────────────────────────────────────────────────────────
   istad-schema-registry:
-    image: confluentinc/cp-schema-registry:7.6.1
+    image: confluentinc/cp-schema-registry:latest
     container_name: istad-schema-registry
     hostname: istad-schema-registry
     ports:
