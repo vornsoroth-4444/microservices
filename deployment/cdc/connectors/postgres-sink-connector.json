@@ -10,7 +10,7 @@
 
     "topics": "oracle-cdc.APPUSER.CUSTOMERS,oracle-cdc.APPUSER.ORDERS,oracle-cdc.APPUSER.PRODUCTS",
 
-    "insert.mode": "upsert",
+    "insert.mode" : "upsert",
     "primary.key.mode": "record_key",
     "delete.enabled": "true",
 
