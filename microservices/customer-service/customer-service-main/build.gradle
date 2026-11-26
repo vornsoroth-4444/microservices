@@ -3,11 +3,11 @@ plugins {
     id 'spring-cloud-common-conventions'
 }
 
-ext {
-    springCloudVersion = "2025.1.4"
-}
-
 dependencies {
+    // Import istad-common-bom via Gradle platform (composite-build compatible)
+    implementation platform(libs.istad.common.bom)
+    annotationProcessor platform(libs.istad.common.bom)
+
     // Call common-swagger (version managed by the BOM)
     implementation 'kh.edu.istad:istad-common-swagger'
 
@@ -22,12 +22,4 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-}
-
-dependencyManagement {
-    imports {
-        // Import published BOM from Nexus
-        mavenBom 'kh.edu.istad:istad-common-bom:1.0.0'
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
-    }
 }
